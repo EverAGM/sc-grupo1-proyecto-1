@@ -1,5 +1,5 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+import { Pool } from 'pg';
+import { DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, NODE_ENV } from '../config.js';
 
 class DatabaseConnection {
   constructor() {
@@ -10,20 +10,20 @@ class DatabaseConnection {
 
   initializePool() {
     const config = {
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT) || 5432,
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      max: parseInt(process.env.DB_MAX_CONNECTIONS) || 20,
-      idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
-      connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 5000,
-      maxUses: parseInt(process.env.DB_MAX_USES) || 7500,
+      host: DB_HOST,
+      port: parseInt(DB_PORT) || 5432,
+      database: DB_NAME,
+      user: DB_USER,
+      password: DB_PASSWORD,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+      maxUses: 7500,
       allowExitOnIdle: false,
     };
 
     // Configuración SSL para producción
-    if (process.env.NODE_ENV === 'production') {
+    if (NODE_ENV === 'production') {
       config.ssl = {
         rejectUnauthorized: false,
       };
@@ -161,7 +161,7 @@ const setupGracefulShutdown = () => {
 setupGracefulShutdown();
 
 // Exportar instancia única
-module.exports = {
+export default {
   query: (text, params) => db.query(text, params),
   getClient: () => db.getClient(),
   healthCheck: () => db.healthCheck(),
