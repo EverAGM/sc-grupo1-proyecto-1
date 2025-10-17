@@ -53,3 +53,19 @@ export const obtenerCuentaPorId = async (req, res) => {
         });
     }
 };
+
+export const verCuentasContables = async (req, res) => {
+    try {
+        const cuentas = await cuentaContableService.obtenerTodasCuentas();
+        res.status(200).json({
+            success: true,
+            data: cuentas
+        });
+    } catch (error) {
+        console.error('Error al obtener cuentas contables:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};

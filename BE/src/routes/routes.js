@@ -3,7 +3,7 @@ const router = express.Router()
 import cuentaContableRoutes from './cuenta_contable.routes.js';
 
 
-router.use('/cuenta_contable', cuentaContableRoutes)
+router.use('/cuentas-contables', cuentaContableRoutes)
 
 router.get('/health', (req, res) => {
     res.json({ 

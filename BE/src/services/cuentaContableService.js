@@ -91,6 +91,11 @@ class CuentaContableService {
 
     return result.rows[0];
   }
+
+  async obtenerTodasCuentas() {
+    const result = await db.query(`SELECT * FROM cuentas_contables ORDER BY codigo`);
+    return result.rows;
+  }
 }
 
 export default new CuentaContableService();
