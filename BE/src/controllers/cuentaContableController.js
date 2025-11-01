@@ -21,7 +21,6 @@ export const crearCuentaContable = async (req, res) => {
             data: nuevaCuenta
         });
     } catch (error) {
-        console.error('Error al crear cuenta contable:', error);
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor'
