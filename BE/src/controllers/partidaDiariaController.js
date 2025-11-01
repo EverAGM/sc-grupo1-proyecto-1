@@ -29,3 +29,42 @@ export const crearPartidaDiaria = async (req, res) => {
         });
     }  
 }
+
+export const obtenerPartidaPorId = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const partida = await partidaDiariaService.obtenerPartidaPorId(id);
+
+        if (!partida) {
+            return res.status(404).json({
+                success: false,
+                message: 'Partida diaria no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: partida
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+}; 
+
+export const verPartidasDiarias = async (req, res) => {
+    try {
+        const partidas = await partidaDiariaService.obtenerTodasPartidas();
+        res.status(200).json({
+            success: true,
+            data: partidas
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
