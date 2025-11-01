@@ -17,6 +17,19 @@ class TransaccionContableService {
     );  
     return result.rows[0];
   }
+
+  async obtenerTransaccionPorId(id) {
+    const result = await db.query(
+      "SELECT * FROM transacciones_contables WHERE id_transaccion = $1",
+      [id]
+    );
+    return result.rows[0];
+  }
+
+  async obtenerTodasTransacciones() {
+    const result = await db.query("SELECT * FROM transacciones_contables");
+    return result.rows;
+  }
 }
 
 export default new TransaccionContableService();
