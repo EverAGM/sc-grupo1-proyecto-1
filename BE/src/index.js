@@ -1,9 +1,18 @@
 import express from 'express';
+import cors from 'cors';
 import routes from './routes/routes.js';
 import { PORT } from './config.js';
 
 const app = express();
 app.use(express.json());
+
+// Habilitar CORS (permite preflight y peticiones desde el frontend dev)
+app.use(cors({
+  origin: "http://localhost:5173", 
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
 // Middleware de logging
 import morgan from 'morgan';
