@@ -18,6 +18,22 @@ export const crearTransaccionContable = async (req, res) => {
       });
     }
 
+    const cuenta_id_num = parseInt(cuenta_id);
+    if(isNaN(cuenta_id_num) || cuenta_id_num<=0){
+      return res.status(400).json({
+        success: false,
+        message: "El id de la cuenta debe ser un entero positivo",
+      });
+    }
+
+    const monto_num= parseInt(monto);
+    if(isNaN(monto_num) || monto_num<=0){
+      return res.status(400).json({
+        success: false,
+        message: "El monto debe ser un entero positivo",
+      });
+    }
+
     const nuevaTransaccion = await transaccionContableService.crearTransaccionContable({
       cuenta_id,
       monto,
@@ -31,6 +47,21 @@ export const crearTransaccionContable = async (req, res) => {
       data: nuevaTransaccion,
     });
   } catch (error) {
+    console.error("Error al crear transacción contable:", error.message);
+
+    if (error.message.includes('CuentaContableNotFound')) {
+      return res.status(404).json({
+          success: false,
+          message: error.message
+      });
+    }
+    if (error.message.includes('PartidaDiariaNotFound')) {
+      return res.status(404).json({
+          success: false,
+          message: error.message
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error interno del servidor",

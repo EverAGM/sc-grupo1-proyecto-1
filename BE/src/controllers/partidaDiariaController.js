@@ -11,6 +11,24 @@ export const crearPartidaDiaria = async (req, res) => {
             });
         }
 
+        // 
+        if (typeof concepto.trim() !== 'string' || concepto.trim().length === 0 || concepto.trim().length > 255) {
+            return res.status(400).json({
+                success: false,
+                message: 'El concepto debe ser una cadena no vacía de máximo 255 caracteres.'
+            });
+        }
+
+        //
+        const id_periodo_num = parseInt(id_periodo);
+        if(isNaN(id_periodo_num) || id_periodo_num <=0 ){
+            return res.status(400).json({
+                success: false,
+                message: "El id_periodo debe ser un número entero positivo válido."
+            });
+
+        }
+
         const nuevaPartida = await partidaDiariaService.crearPartidaDiaria({
             concepto,
             estado,
@@ -23,6 +41,12 @@ export const crearPartidaDiaria = async (req, res) => {
             data: nuevaPartida
         });
     } catch (error) {
+        if (error.message === "PeriodoContableNotFound") {
+            return res.status(404).json({ // Se usa 404 porque el recurso referenciado no existe
+                success: false,
+                message: "El período contable especificado no existe."
+            });
+        }
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor'
@@ -33,6 +57,15 @@ export const crearPartidaDiaria = async (req, res) => {
 export const obtenerPartidaPorId = async (req, res) => {
     try {
         const { id } = req.params;
+
+        const id_partida = parseInt(id);
+        if (isNaN(id_partida) || id_partida <=0){//
+            return res.status(400).json({
+                success: false,
+                message: 'El ID porporcionado no es un número entero positivo válido'
+            });
+        }
+
         const partida = await partidaDiariaService.obtenerPartidaPorId(id);
 
         if (!partida) {

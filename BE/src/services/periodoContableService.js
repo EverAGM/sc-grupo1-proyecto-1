@@ -2,9 +2,9 @@ import db from "../database/db.js";
 
 class PeriodoContableService {
     async crearPeriodoContable(datos) {
-        const { fecha_inicio, fecha_fin, estado } = datos;
+        const { fecha_inicio: fechaInicioISO, fecha_fin: fechaFinISO, estado } = datos;
         
-        if (!fecha_inicio || !fecha_fin || !estado) {
+        if (!fechaInicioISO || !fechaFinISO || !estado) {
             throw new Error("Faltan datos obligatorios para crear el periodo contable");
         }
 
@@ -13,7 +13,7 @@ class PeriodoContableService {
              (fecha_inicio, fecha_fin, estado) 
              VALUES ($1, $2, $3) 
              RETURNING *`,
-            [fecha_inicio, fecha_fin, estado]
+            [fechaInicioISO, fechaFinISO, estado]
         );
 
         return result.rows[0];

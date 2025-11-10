@@ -1,8 +1,22 @@
 import db from "../database/db.js";
+import cuentaContableService from './cuentaContableService.js';
+import partidaDiariaService from "./partidaDiariaService.js";
 
 class TransaccionContableService {
   async crearTransaccionContable(datos) {
     const {cuenta_id, monto, tipo_transaccion, partida_diaria_id } = datos;
+
+
+    const cuenta_contable = await cuentaContableService.obtenerCuentaPorId(cuenta_id);
+    if(!cuenta_contable){
+      throw new Error("CuentaContableNotFound")
+    }
+
+    const partidaResult = await partidaDiariaService.obtenerPartidaPorId(partida_diaria_id);
+    if (!partidaResult) {//se valida si no hay partida
+      throw new Error("PartidaDiariaNotFound");
+    }
+   
 
     // Validar los datos
     if (!cuenta_id || !monto || !tipo_transaccion || !partida_diaria_id) {

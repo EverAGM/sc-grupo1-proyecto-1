@@ -1,11 +1,13 @@
 import db from "../database/db.js"
+import PeriodoContableService from './periodoContableService.js';
 
 class PartidaDiariaService {
   async crearPartidaDiaria(datos) {
     const { concepto, estado, id_periodo} = datos;
 
-    if (!concepto || !id_periodo) {
-      throw new Error("Concepto e ID de periodo son obligatorios");
+    const periodo = await PeriodoContableService.obtenerPeriodoPorId(id_periodo);
+    if(!periodo){
+      throw new Error("PeriodoContableNotFound")
     }
 
     const result = await db.query(

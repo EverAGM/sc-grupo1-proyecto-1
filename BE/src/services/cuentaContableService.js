@@ -8,6 +8,15 @@ class CuentaContableService {
     if (!parent_id && !tipo) {
       throw new Error("Las cuentas raíz deben tener un tipo");
     }
+//VALIDACION CRITICA IMPLEMENTADA
+    const cuentaExistente = await db.query(
+      "SELECT 1 FROM cuentas_contables WHERE nombre = $1",
+      [nombre]
+    );
+    if (cuentaExistente.rows.length > 0) {
+      throw new Error(`Ya existe una cuenta contable con el nombre: "${nombre}"`);
+    }
+//VLIDACOIN CRITICA IMPLEMENTADA
 
     // Generar código automático (ahora requiere el tipo para cuentas raíz)
     const codigo = await this.generarCodigoAutomatico(parent_id, tipo);
