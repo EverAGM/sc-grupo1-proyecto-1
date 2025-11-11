@@ -7,6 +7,7 @@ import { obtenerCuentas } from "../services/cuentasService";
 import { crearPartida, obtenerPartidaPorId } from "../services/partidaDiariaService";
 import { obtenerPeriodos } from "../services/periodosService";
 import "./TransaccionesPage.css";
+import { toast } from 'react-toastify';
 
 export default function TransaccionesPage() {
   const [transacciones, setTransacciones] = useState([]);
@@ -139,13 +140,13 @@ export default function TransaccionesPage() {
 
   const guardarPartidaCompleta = async () => {
     if (!partida.concepto || !partida.id_periodo) {
-      alert("Debe ingresar concepto y periodo");
+      toast.warn("Debe ingresar concepto y periodo");
       return;
     }
 
     try {
       if (transTemp.length === 0) {
-        alert("Debe agregar al menos una transacción antes de guardar la partida");
+        toast.warn("Debe agregar al menos una transacción antes de guardar la partida");
         return;
       }
       setIsSaving(true);
@@ -158,13 +159,14 @@ export default function TransaccionesPage() {
             partida_diaria_id: nuevaPartida.id_partida_diaria,
           });
         }
-        alert("Partida y transacciones guardadas correctamente");
+        toast.success("Partida y transacciones guardadas correctamente");
         closeModal();
         await cargarTransacciones();
       }
     } catch (err) {
       console.error(err);
-      alert("Ocurrió un error al guardar la partida");
+      const msg = err?.message || 'Ocurrió un error al guardar la partida';
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -281,6 +283,7 @@ export default function TransaccionesPage() {
               <h3>Transacciones de esta partida</h3>
               <div className="form-transaccion-inline">
                 <select
+                  className="select-cuenta"
                   value={formTrans.cuenta_id}
                   onChange={(e) =>
                     setFormTrans({ ...formTrans, cuenta_id: e.target.value })
@@ -306,7 +309,6 @@ export default function TransaccionesPage() {
                       setFormTrans({ ...formTrans, monto: "" });
                       return;
                     }
-                    // allow numbers with up to 2 decimals
                     const normalized = val.replace(/,/g, ".");
                     if (/^\d+(?:\.\d{0,2})?$/.test(normalized)) {
                       setFormTrans({ ...formTrans, monto: normalized });
@@ -316,6 +318,7 @@ export default function TransaccionesPage() {
                 />
 
                 <select
+                  className="select-tipo"
                   value={formTrans.tipo_transaccion}
                   onChange={(e) =>
                     setFormTrans({
