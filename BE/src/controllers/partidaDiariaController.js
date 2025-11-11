@@ -101,3 +101,51 @@ export const verPartidasDiarias = async (req, res) => {
         });
     }
 };
+
+export const obtenerPartidasPorPeriodo = async (req, res) => {
+    try {
+        const { id_periodo } = req.params;
+
+        const id_periodo_num = parseInt(id_periodo);
+        if (isNaN(id_periodo_num) || id_periodo_num <=0){//
+            return res.status(400).json({
+                success: false,
+                message: 'El ID de período proporcionado no es un número entero positivo válido'
+            });
+        }
+
+        const partidas = await partidaDiariaService.obtenerPartidaPorPeriodo(id_periodo);
+
+        res.status(200).json({
+            success: true,
+            data: partidas
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+export const obtenerPartidasPorFechas = async (req, res) => {
+    try {
+        const { fecha_inicio, fecha_fin } = req.query;
+        if (!fecha_inicio || !fecha_fin) {
+            return res.status(400).json({
+                success: false,
+                message: 'Faltan parámetros de fecha obligatorios'
+            });
+        }
+        const partidas = await partidaDiariaService.obtenerPartidasPorFechas(fecha_inicio, fecha_fin);
+        res.status(200).json({
+            success: true,
+            data: partidas
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};  

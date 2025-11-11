@@ -109,3 +109,20 @@ export const verTransaccionesContables = async (req, res) => {
     });
   }
 };
+
+export const obtenerTransaccionesPorPartida = async (req, res) => {
+  try {
+    const { partida_diaria_id } = req.params;
+    const transacciones = await transaccionContableService.obtenerTransaccionesPorPartida(partida_diaria_id);
+    res.status(200).json({
+      success: true,
+      data: transacciones,
+    });
+  } catch (error) {
+    console.error("Error al obtener transacciones por partida diaria:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+    });
+  }
+};

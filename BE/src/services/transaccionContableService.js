@@ -50,6 +50,19 @@ class TransaccionContableService {
     );
     return result.rows;
   }
+
+  async obtenerTransaccionesPorPartida(partida_diaria_id) {
+    const result = await db.query(
+      `SELECT tc.*, pd.id_partida_diaria, pd.concepto AS partida_concepto, pd.estado AS partida_estado, pd.id_periodo,
+              p.fecha_inicio AS periodo_fecha_inicio, p.fecha_fin AS periodo_fecha_fin
+       FROM transacciones_contables tc
+       LEFT JOIN partida_diaria pd ON tc.partida_diaria_id = pd.id_partida_diaria
+       LEFT JOIN periodos_contables p ON pd.id_periodo = p.id_periodo
+       WHERE tc.partida_diaria_id = $1`,
+      [partida_diaria_id]
+    );
+    return result.rows;
+  }
 }
 
 export default new TransaccionContableService();
