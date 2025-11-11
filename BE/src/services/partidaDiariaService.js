@@ -34,6 +34,89 @@ class PartidaDiariaService {
     );
     return result.rows;
   }
+
+  async obtenerPartidaPorPeriodo(id_periodo) {
+    const result = await db.query(
+        `SELECT
+            pd.id_partida_diaria,
+            pd.fecha_creacion,
+            pd.concepto,
+            pd.estado,
+            pd.id_periodo,
+            COALESCE(
+                json_agg(
+                  json_build_object(
+                      'id_transaccion', tc.id_transaccion,
+                      'fecha_creacion', tc.fecha_creacion,
+                      'cuenta_id', tc.cuenta_id,
+                      'codigo_cuenta', cc.codigo,
+                      'nombre_cuenta', cc.nombre,
+                      'monto', tc.monto,
+                      'tipo_transaccion', tc.tipo_transaccion
+                  )
+                ) FILTER (WHERE tc.id_transaccion IS NOT NULL),
+                '[]'::json
+            ) AS transacciones
+        FROM
+            partida_diaria pd
+        LEFT JOIN
+            transacciones_contables tc 
+            ON pd.id_partida_diaria = tc.partida_diaria_id
+        LEFT JOIN
+            cuentas_contables cc
+            ON cc.id_cuenta = tc.cuenta_id
+        WHERE 
+            pd.id_periodo = $1
+        GROUP BY
+            pd.id_partida_diaria, pd.fecha_creacion, pd.concepto, pd.estado, pd.id_periodo
+        ORDER BY
+            pd.fecha_creacion DESC;`,
+        [id_periodo] 
+    );
+    return result.rows;
+  }
+
+  async obtenerPartidasPorFechas(fecha_inicio, fecha_fin) {
+    const result = await db.query(
+      `SELECT
+            pd.id_partida_diaria,
+            pd.fecha_creacion,
+            pd.concepto,
+            pd.estado,
+            pd.id_periodo,
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'id_transaccion', tc.id_transaccion,
+                        'fecha_creacion', tc.fecha_creacion,
+                        'cuenta_id', tc.cuenta_id,
+                        'codigo_cuenta', cc.codigo,
+                        'nombre_cuenta', cc.nombre,
+                        'monto', tc.monto,
+                        'tipo_transaccion', tc.tipo_transaccion
+                    )
+                ) FILTER (WHERE tc.id_transaccion IS NOT NULL),
+                '[]'::json
+            ) AS transacciones
+        FROM
+            partida_diaria pd
+        LEFT JOIN
+            transacciones_contables tc 
+            ON pd.id_partida_diaria = tc.partida_diaria_id
+        LEFT JOIN
+            cuentas_contables cc
+            ON cc.id_cuenta = tc.cuenta_id
+        WHERE 
+          pd.fecha_creacion::date >= $1::date
+          AND pd.fecha_creacion::date <= $2::date
+        GROUP BY
+            pd.id_partida_diaria, pd.fecha_creacion, pd.concepto, pd.estado, pd.id_periodo
+        ORDER BY
+            pd.fecha_creacion DESC;`,
+      [fecha_inicio, fecha_fin]
+    );
+    return result.rows;
+  }
 }
 
 export default new PartidaDiariaService();
