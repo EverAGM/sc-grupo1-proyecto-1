@@ -1,62 +1,56 @@
-import ImportacionCSVService from '../services/ImportacionCSVService.js';
+import ImportacionXLSXService from '../services/manejoExcelService.js';
 import multer from 'multer';
-
 
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: {
+        fileSize: 10 * 1024 * 1024, 
         files: 1
     },
     fileFilter: (req, file, cb) => {
-        const esCSV = file.mimetype === 'text/csv' || 
-                     file.mimetype === 'application/csv' ||
-                     file.mimetype === 'text/plain' ||
-                     file.originalname.toLowerCase().endsWith('.csv');
+       
+        const esXLSX = file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                       file.mimetype === 'application/vnd.ms-excel' ||
+                       file.originalname.toLowerCase().endsWith('.xlsx') ||
+                       file.originalname.toLowerCase().endsWith('.xls');
         
-        if (esCSV) {
+        if (esXLSX) {
             cb(null, true);
         } else {
-            cb(new Error('Solo archivo .csv'), false);
+            cb(new Error('Solo archivos Excel (.xlsx, .xls)'), false);
         }
     }
 });
 
-class ImportacionCSVController {
+class ImportacionXLSXController {
     constructor() {
         this.uploadMiddleware = upload.single('archivo');
     }
-    async importarCSV(req, res) {
+    async importarXLSX(req, res) {
         const startTime = Date.now();
         try {
             if (!req.file) {
                 return res.status(400).json({
                     success: false,
-                    error: 'No se proporcionó ningún archivo CSV',
-                    codigo: 'ARCHIVO_FALTANTE',
-                    ayuda: {
-                        metodo: 'POST',
-                        url: '/api/importacion-csv/importar',
-                        contentType: 'multipart/form-data',
-                        campo: 'archivo',
-                        extension: '.csv'
-                    }
+                    error: 'No se ha dado ningún archivo Excel',
+                    codigo: 'ARCHIVO_FALTANTE'
                 });
             }
+
             if (!req.file.buffer || req.file.buffer.length === 0) {
-                console.log(' Archivo vacío');
                 return res.status(400).json({
                     success: false,
-                    error: 'El archivo CSV está vacío',
+                    error: 'El archivo Excel está vacío',
                     codigo: 'ARCHIVO_VACIO'
                 });
             }
 
-            const resultado = await ImportacionCSVService.convertirCSVaJSON(req.file.buffer);
+            const resultado = await ImportacionXLSXService.convertirXLSXaJSON(req.file.buffer);
             const tiempoProcesamiento = Date.now() - startTime;
             const respuesta = {
                 success: true,
-                message: `CSV importado correctamente: ${resultado.transacciones.length} transacciones procesadas`,
+                message: `Excel importado correctamente: ${resultado.transacciones.length} `,
                 datos: {
                     archivo: req.file.originalname,
                     transaccionesImportadas: resultado.transacciones.length,
@@ -69,7 +63,7 @@ class ImportacionCSVController {
             
             if (resultado.errores.length > 0) {
                 respuesta.advertencias = {
-                    mensaje: `Se encontraron ${resultado.errores.length} errores en el archivo`,
+                    mensaje: `Error:  ${resultado.errores.length}`,
                     errores: resultado.errores
                 };
             }
@@ -78,10 +72,10 @@ class ImportacionCSVController {
 
         } catch (error) {
             const tiempoProcesamiento = Date.now() - startTime;
-
+    
             res.status(500).json({
                 success: false,
-                error: 'Error procesando el archivo CSV',
+                error: 'Error procesando el archivo Excel',
                 detalles: error.message,
                 codigo: 'ERROR_PROCESAMIENTO',
                 archivo: req.file?.originalname || 'desconocido'
@@ -91,14 +85,15 @@ class ImportacionCSVController {
 
     async obtenerTransacciones(req, res) {
         try {
-            const resultado = ImportacionCSVService.obtenerDatosImportados();
+            const resultado = ImportacionXLSXService.obtenerDatosImportados();
+            
             if (resultado.cantidad === 0) {
                 return res.status(404).json({
                     success: false,
                     message: 'No hay transacciones importadas',
                     datos: []
                 });
-            }
+            }          
             res.json({
                 success: true,
                 message: `${resultado.cantidad} transacciones encontradas`,
@@ -106,12 +101,31 @@ class ImportacionCSVController {
             });
             
         } catch (error) {
-            console.error('error: ', error);
             
             res.status(500).json({
                 success: false,
                 error: 'Error al obtener las transacciones',
                 detalles: error.message
+            });
+        }
+    }
+
+    async exportarXLSX(req, res) {
+        try {
+            const resultado = ImportacionXLSXService.exportarAXLSX();
+            
+            res.setHeader('Content-Type', resultado.contentType);
+            res.setHeader('Content-Disposition', `attachment; filename="${resultado.filename}"`);
+            res.setHeader('Content-Length', resultado.buffer.length);
+            res.send(resultado.buffer);
+            
+        } catch (error) {
+                 
+            res.status(500).json({
+                success: false,
+                error: 'Error al exportar las transacciones a Excel',
+                detalles: error.message,
+                codigo: 'ERROR_EXPORTACION'
             });
         }
     }
@@ -145,11 +159,11 @@ class ImportacionCSVController {
             });
         }
         
-        if (error && error.message.includes('Solo se permiten archivos CSV')) {
+        if (error && error.message.includes('Solo archivos Excel')) {
             return res.status(400).json({
                 success: false,
                 error: 'Formato de archivo no válido',
-                detalles: 'Solo se aceptan archivos .csv',
+                detalles: 'Solo se aceptan archivos Excel (.xlsx, .xls)',
                 codigo: 'FORMATO_INVALIDO'
             });
         }
@@ -157,5 +171,5 @@ class ImportacionCSVController {
     }
 }
 
-export default new ImportacionCSVController();
+export default new ImportacionXLSXController();
 
