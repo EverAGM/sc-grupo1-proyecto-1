@@ -105,6 +105,15 @@ class CuentaContableService {
     const result = await db.query(`SELECT * FROM cuentas_contables ORDER BY codigo`);
     return result.rows;
   }
+
+  async eliminarCuentaContable(id) {
+    const result = await db.query(
+      `DELETE FROM cuentas_contables WHERE id_cuenta = $1 RETURNING *`,
+      [id]
+    );
+
+    return result.rows[0];
+  }   
 }
 
 export default new CuentaContableService();
