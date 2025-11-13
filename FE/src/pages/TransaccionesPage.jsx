@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   obtenerTransacciones,
   crearTransaccion,
@@ -8,6 +8,49 @@ import { crearPartida, obtenerPartidaPorId } from "../services/partidaDiariaServ
 import { obtenerPeriodos } from "../services/periodosService";
 import "./TransaccionesPage.css";
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
+
+const trimestresBase = [
+  { key: '1', label: 'Trimestre 1 (Ene - Mar)' },
+  { key: '2', label: 'Trimestre 2 (Abr - Jun)' },
+  { key: '3', label: 'Trimestre 3 (Jul - Sep)' },
+  { key: '4', label: 'Trimestre 4 (Oct - Dic)' },
+];
+
+const getDynamicEstado = (fechaInicioISO, fechaFinISO) => {
+  const today = new Date();
+  const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  
+  if (!fechaInicioISO || !fechaFinISO) return 'INDETERMINADO';
+  
+  const inicio = new Date(fechaInicioISO);
+  const fin = new Date(fechaFinISO);
+  fin.setUTCHours(23, 59, 59, 999); 
+
+  if (todayUTC >= inicio && todayUTC <= fin) {
+    return 'ACTIVO';
+  }
+  if (todayUTC < inicio) {
+    return 'PRÓXIMO';
+  }
+  if (todayUTC > fin) {
+    return 'FINALIZADO';
+  }
+  return 'INDETERMINADO';
+};
+
+const parseFechaISO = (isoString) => {
+  if (!isoString) return { anio: null, mes: null, trimestre: null };
+  const fecha = new Date(isoString);
+  const anio = fecha.getUTCFullYear();
+  const mes = fecha.getUTCMonth(); 
+  let trimestre;
+  if (mes < 3) trimestre = '1';
+  else if (mes < 6) trimestre = '2';
+  else if (mes < 9) trimestre = '3';
+  else trimestre = '4';
+  return { anio, trimestre };
+};
 
 export default function TransaccionesPage() {
   const [transacciones, setTransacciones] = useState([]);
@@ -17,22 +60,25 @@ export default function TransaccionesPage() {
   const partidasFetchingRef = useRef(new Set());
 
   const [showModal, setShowModal] = useState(false);
-
   const [partida, setPartida] = useState({
     concepto: "",
     id_periodo: "",
     fecha_creacion: new Date().toISOString().split("T")[0],
   });
 
-  // Estado de transacciones temporales (aún no guardadas)
   const [transTemp, setTransTemp] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [formTrans, setFormTrans] = useState({
     cuenta_id: "",
     monto: "",
     tipo_transaccion: "DEBE",
   });
+
+  const [filterAnio, setFilterAnio] = useState("todos");
+  const [filterTrimestre, setFilterTrimestre] = useState("todos");
+  const [filterEstado, setFilterEstado] = useState("todos");
 
   const cargarTransacciones = async () => {
     const data = await obtenerTransacciones();
@@ -43,9 +89,9 @@ export default function TransaccionesPage() {
     if (!dateString) return "";
     const d = new Date(dateString);
     if (Number.isNaN(d.getTime())) return dateString;
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const year = d.getUTCFullYear();
     return `${day}/${month}/${year}`;
   };
 
@@ -96,6 +142,7 @@ export default function TransaccionesPage() {
     const c = cuentas.find((x) => String(x.id_cuenta) === String(id));
     return c ? `${c.codigo} - ${c.nombre}` : id;
   };
+
   useEffect(() => {
     if (!transacciones || transacciones.length === 0) return;
     const newEntries = {};
@@ -137,6 +184,38 @@ export default function TransaccionesPage() {
     return `#${sid}`;
   };
 
+  const aniosParaFiltro = useMemo(() => {
+    const anios = new Set(periodos.map(p => parseFechaISO(p.fecha_inicio).anio));
+    return Array.from(anios).filter(a => a != null).sort((a, b) => b - a);
+  }, [periodos]);
+
+  const listaFiltrada = useMemo(() => {
+    return transacciones
+      .map(t => {
+        const { anio, trimestre } = parseFechaISO(t.periodo_fecha_inicio);
+        const estadoActual = getDynamicEstado(t.periodo_fecha_inicio, t.periodo_fecha_fin);
+        
+        let periodoLabel = "N/A";
+        if (anio && trimestre) {
+          periodoLabel = `${anio} - Trimestre ${trimestre}`;
+        }
+        
+        return { ...t, anio, trimestre, estadoActual, periodoLabel };
+      })
+      .filter(t => {
+        if (filterAnio !== 'todos' && t.anio !== parseInt(filterAnio)) return false;
+        if (filterTrimestre !== 'todos' && t.trimestre !== filterTrimestre) return false;
+        if (filterEstado !== 'todos' && t.estadoActual !== filterEstado) return false;
+        return true;
+      })
+      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+  }, [transacciones, filterAnio, filterTrimestre, filterEstado]);
+
+  const resetFilters = () => {
+    setFilterAnio("todos");
+    setFilterTrimestre("todos");
+    setFilterEstado("todos");
+  };
 
   const guardarPartidaCompleta = async () => {
     if (!partida.concepto || !partida.id_periodo) {
@@ -172,23 +251,105 @@ export default function TransaccionesPage() {
     }
   };
 
+  const handleExportar = () => {
+    setIsExporting(true);
+    try {
+      const datosFormateados = listaFiltrada.map(t => ({
+        "Fecha": formatDate(t.fecha_creacion),
+        "Periodo": t.periodo_fecha_inicio 
+          ? `${formatDate(t.periodo_fecha_inicio)} - ${formatDate(t.periodo_fecha_fin)}` 
+          : "N/A",
+        "Cuenta": getCuentaNombre(t.cuenta_id),
+        "Monto": parseFloat(formatMonto(t.monto)),
+        "Tipo": t.tipo_transaccion,
+        "Concepto Partida": getConceptoPartida(t.partida_diaria_id),
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(datosFormateados);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Transacciones");
+      
+      XLSX.writeFile(workbook, `reporte_transacciones_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      toast.success("Reporte de transacciones generado con éxito.");
+    } catch (error) {
+      console.error("Error al exportar en el frontend:", error);
+      toast.error("Error al generar el archivo Excel.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="titulo">Transacciones Contables</h1>
-      <div className="table-wrapper">
-        <table className="table-trans">
+    <div className="transacciones-page">
+      <h1>Transacciones Contables</h1>
+
+      <div className="header-acciones">
+        <button
+          onClick={handleExportar}
+          className="btn-exportar"
+          disabled={isExporting || isSaving}
+        >
+          {isExporting ? (
+            <><span className="spinner" aria-hidden></span>Exportando...</>
+          ) : (
+            "Exportar Excel"
+          )}
+        </button>
+        <button
+          onClick={openModal}
+          className="btn-crear"
+          disabled={isSaving || isExporting}
+        >
+          Crear Nueva Partida
+        </button>
+      </div>
+      
+      <div className="filter-container">
+        <div className="filter-group">
+          <label htmlFor="filter-anio">Filtrar por Año</label>
+          <select id="filter-anio" value={filterAnio} onChange={(e) => setFilterAnio(e.target.value)}>
+            <option value="todos">Todos los Años</option>
+            {aniosParaFiltro.map(anio => (
+              <option key={anio} value={anio}>{anio}</option>
+            ))}
+          </select>
+        </div>
+        <div className="filter-group">
+          <label htmlFor="filter-trimestre">Filtrar por Periodo</label>
+          <select id="filter-trimestre" value={filterTrimestre} onChange={(e) => setFilterTrimestre(e.target.value)}>
+            <option value="todos">Todos los Periodos</option>
+            {trimestresBase.map(t => (
+              <option key={t.key} value={t.key}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="filter-group">
+          <label htmlFor="filter-estado">Filtrar por Estado Periodo</label>
+          <select id="filter-estado" value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)}>
+            <option value="todos">Todos los Estados</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="PRÓXIMO">Próximo</option>
+            <option value="FINALIZADO">Finalizado</option>
+          </select>
+        </div>
+        <button onClick={resetFilters} className="btn-secondary">Limpiar</button>
+      </div>
+
+      <div className="table-container">
+        <table className="transacciones-table">
           <thead>
             <tr>
-              <th>Fecha de Creación</th>
+              <th>Fecha</th>
               <th>Periodo</th>
               <th>Cuenta</th>
-              <th>Monto</th>
+              <th className="monto-cell">Monto</th>
               <th>Tipo</th>
-              <th>Partida</th>
+              <th>Concepto de Partida</th>
             </tr>
           </thead>
           <tbody>
-            {transacciones.map((t) => (
+            {listaFiltrada.map((t) => (
               <tr key={t.id_transaccion}>
                 <td>{formatDate(t.fecha_creacion)}</td>
                 <td>
@@ -196,11 +357,11 @@ export default function TransaccionesPage() {
                     ? `${formatDate(t.periodo_fecha_inicio)} - ${formatDate(
                         t.periodo_fecha_fin
                       )}`
-                    : ""}
+                    : "N/A"}
                 </td>
                 <td>{getCuentaNombre(t.cuenta_id)}</td>
-                <td>{formatMonto(t.monto)}</td>
-                <td>{t.tipo_transaccion}</td>
+                <td className="monto-cell">{formatMonto(t.monto)}</td>
+                <td className={`tipo-${t.tipo_transaccion}`}>{t.tipo_transaccion}</td>
                 <td>{getConceptoPartida(t.partida_diaria_id)}</td>
               </tr>
             ))}
@@ -208,14 +369,6 @@ export default function TransaccionesPage() {
         </table>
       </div>
 
-      <div className="create-btn-inline">
-        <button
-          onClick={openModal}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Crear Nueva Partida
-        </button>
-      </div>
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div
@@ -225,7 +378,7 @@ export default function TransaccionesPage() {
             aria-modal="true"
           >
             <div className="modal-header">
-              <strong>Nueva Partida Diaria</strong>
+              <h2>Nueva Partida Diaria</h2>
               <button
                 className="modal-close"
                 onClick={closeModal}
@@ -235,16 +388,36 @@ export default function TransaccionesPage() {
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               <form
                 onSubmit={(e) => e.preventDefault()}
-                className="form-transaccion"
+                className="form-partida"
               >
-                <div className="form-group">
-                  <label>Fecha de Creación</label>
-                  <input type="date" value={partida.fecha_creacion} disabled />
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Fecha de Creación</label>
+                    <input type="date" value={partida.fecha_creacion} disabled />
+                  </div>
+                  <div className="form-group">
+                    <label>Periodo</label>
+                    <select
+                      value={partida.id_periodo}
+                      onChange={(e) =>
+                        setPartida({ ...partida, id_periodo: e.target.value })
+                      }
+                      disabled={isSaving}
+                      required
+                    >
+                      <option value="">Seleccione periodo</option>
+                      {periodos.map((p) => (
+                        <option key={p.id_periodo} value={p.id_periodo}>
+                          {p.id_periodo} - {formatDate(p.fecha_inicio)} al {formatDate(p.fecha_fin)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-
+                
                 <div className="form-group">
                   <label>Concepto</label>
                   <input
@@ -258,79 +431,69 @@ export default function TransaccionesPage() {
                     required
                   />
                 </div>
+              </form>
 
-                <div className="form-group">
-                  <label>Periodo</label>
+              <hr style={{margin: "20px 0", border: "none", borderTop: "1px solid #e5e7eb"}} />
+
+              <h3>Transacciones de esta partida</h3>
+              <div className="form-transaccion-inline">
+                <div className="form-group" style={{flex: 2}}>
+                  <label>Cuenta</label>
                   <select
-                    value={partida.id_periodo}
+                    value={formTrans.cuenta_id}
                     onChange={(e) =>
-                      setPartida({ ...partida, id_periodo: e.target.value })
+                      setFormTrans({ ...formTrans, cuenta_id: e.target.value })
                     }
                     disabled={isSaving}
-                    required
                   >
-                    <option value="">Seleccione periodo</option>
-                    {periodos.map((p) => (
-                      <option key={p.id_periodo} value={p.id_periodo}>
-                        {p.id_periodo} - {formatDate(p.fecha_inicio)} to {formatDate(p.fecha_fin)}
+                    <option value="">Seleccione cuenta</option>
+                    {cuentas.map((c) => (
+                      <option key={c.id_cuenta} value={c.id_cuenta}>
+                        {c.codigo} - {c.nombre}
                       </option>
                     ))}
                   </select>
                 </div>
-              </form>
 
-              <hr className="my-3" />
-              <h3>Transacciones de esta partida</h3>
-              <div className="form-transaccion-inline">
-                <select
-                  className="select-cuenta"
-                  value={formTrans.cuenta_id}
-                  onChange={(e) =>
-                    setFormTrans({ ...formTrans, cuenta_id: e.target.value })
-                  }
-                  disabled={isSaving}
-                >
-                  <option value="">Seleccione cuenta</option>
-                  {cuentas.map((c) => (
-                    <option key={c.id_cuenta} value={c.id_cuenta}>
-                      {c.codigo} - {c.nombre}
-                    </option>
-                  ))}
-                </select>
+                <div className="form-group" style={{flex: 1}}>
+                  <label>Monto</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Monto"
+                    value={formTrans.monto}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "") {
+                        setFormTrans({ ...formTrans, monto: "" });
+                        return;
+                      }
+      
+                      const normalized = val.replace(/,/g, ".");
+                      if (/^\d*\.?\d{0,2}$/.test(normalized)) {
+                        setFormTrans({ ...formTrans, monto: normalized });
+                      }
+                    }}
+                    disabled={isSaving}
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="Monto"
-                  value={formTrans.monto}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === "") {
-                      setFormTrans({ ...formTrans, monto: "" });
-                      return;
+                <div className="form-group" style={{flex: 1}}>
+                  <label>Tipo</label>
+                  <select
+                    value={formTrans.tipo_transaccion}
+                    onChange={(e) =>
+                      setFormTrans({
+                        ...formTrans,
+                        tipo_transaccion: e.target.value,
+                      })
                     }
-                    const normalized = val.replace(/,/g, ".");
-                    if (/^\d+(?:\.\d{0,2})?$/.test(normalized)) {
-                      setFormTrans({ ...formTrans, monto: normalized });
-                    }
-                  }}
-                  disabled={isSaving}
-                />
-
-                <select
-                  className="select-tipo"
-                  value={formTrans.tipo_transaccion}
-                  onChange={(e) =>
-                    setFormTrans({
-                      ...formTrans,
-                      tipo_transaccion: e.target.value,
-                    })
-                  }
-                  disabled={isSaving}
-                >
-                  <option value="DEBE">DEBE</option>
-                  <option value="HABER">HABER</option>
-                </select>
+                    disabled={isSaving}
+                  >
+                    <option value="DEBE">DEBE</option>
+                    <option value="HABER">HABER</option>
+                  </select>
+                </div>
 
                 <button
                   type="button"
@@ -341,36 +504,40 @@ export default function TransaccionesPage() {
                   Agregar
                 </button>
               </div>
+              
               {transTemp.length > 0 && (
-                <table className="table-trans mt-3">
-                  <thead>
-                    <tr>
-                      <th>Cuenta</th>
-                      <th>Monto</th>
-                      <th>Tipo</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transTemp.map((t, i) => (
-                      <tr key={i}>
-                        <td>{getCuentaNombre(t.cuenta_id)}</td>
-                        <td>{formatMonto(t.monto)}</td>
-                        <td>{t.tipo_transaccion}</td>
-                        <td>
-                          <button
-                            type="button"
-                            onClick={() => eliminarTrans(i)}
-                            className="btn-cancelar"
-                            disabled={isSaving}
-                          >
-                            Eliminar
-                          </button>
-                        </td>
+                <div className="table-container" style={{marginTop: "16px", maxHeight: '200px', overflowY: 'auto'}}>
+                  <table className="transacciones-table">
+                    <thead>
+                      <tr>
+                        <th>Cuenta</th>
+                        <th className="monto-cell">Monto</th>
+                        <th>Tipo</th>
+                        <th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {transTemp.map((t, i) => (
+                        <tr key={i}>
+                          <td>{getCuentaNombre(t.cuenta_id)}</td>
+                          <td className="monto-cell">{formatMonto(t.monto)}</td>
+                          <td>{t.tipo_transaccion}</td>
+                          <td>
+                            <button
+                              type="button"
+                              onClick={() => eliminarTrans(i)}
+                              className="btn-cancelar"
+                              style={{padding: "4px 8px"}}
+                              disabled={isSaving}
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 
