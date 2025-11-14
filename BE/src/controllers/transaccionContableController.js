@@ -127,3 +127,70 @@ export const obtenerTransaccionesPorPartida = async (req, res) => {
     });
   }
 };
+
+export const eliminarTransaccionContable = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const transaccionEliminada = await transaccionContableService.eliminarTransaccionContable(id);
+
+        if (!transaccionEliminada) {
+            return res.status(404).json({
+                success: false,
+                message: 'Transacción contable no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Transacción contable eliminada exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar transacción contable:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+export const actualizarTransaccionContable = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion } = req.body;
+
+        if (!cuenta_id || !monto || !tipo_transaccion || !partida_diaria_id || !fecha_operacion) {
+            return res.status(400).json({
+                success: false,
+                message: 'Faltan datos requeridos'
+            });
+        }
+
+        const transaccionActualizada = await transaccionContableService.actualizarTransaccionContable(id, {
+            cuenta_id,
+            monto,
+            tipo_transaccion,
+            partida_diaria_id,
+            fecha_operacion
+        });
+
+        if (!transaccionActualizada) {
+            return res.status(404).json({
+                success: false,
+                message: 'Transacción contable no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Transacción contable actualizada exitosamente',
+            data: transaccionActualizada
+        });
+    } catch (error) {
+        console.error('Error al actualizar transacción contable:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
