@@ -2,9 +2,9 @@ import transaccionContableService from "../services/transaccionContableService.j
 
 export const crearTransaccionContable = async (req, res) => {
   try {
-    const { cuenta_id, monto, tipo_transaccion, partida_diaria_id } = req.body;
+    const { cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion } = req.body;
 
-    if (!cuenta_id || !monto || !tipo_transaccion || !partida_diaria_id) {
+    if (!cuenta_id || !monto || !tipo_transaccion || !partida_diaria_id || !fecha_operacion) {
       return res.status(400).json({
         success: false,
         message: "Faltan datos requeridos",
@@ -39,6 +39,7 @@ export const crearTransaccionContable = async (req, res) => {
       monto,
       tipo_transaccion,
       partida_diaria_id,
+      fecha_operacion,
     });
 
     res.status(201).json({

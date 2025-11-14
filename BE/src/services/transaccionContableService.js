@@ -4,7 +4,7 @@ import partidaDiariaService from "./partidaDiariaService.js";
 
 class TransaccionContableService {
   async crearTransaccionContable(datos) {
-    const {cuenta_id, monto, tipo_transaccion, partida_diaria_id } = datos;
+    const {cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion } = datos;
 
 
     const cuenta_contable = await cuentaContableService.obtenerCuentaPorId(cuenta_id);
@@ -25,9 +25,9 @@ class TransaccionContableService {
 
     const result = await db.query(
       `INSERT INTO transacciones_contables 
-         (cuenta_id, monto, tipo_transaccion, partida_diaria_id) 
-         VALUES ($1, $2, $3, $4) 
-         RETURNING *`,[cuenta_id, monto, tipo_transaccion, partida_diaria_id]
+         (cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion) 
+         VALUES ($1, $2, $3, $4, $5) 
+         RETURNING *`,[cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion]
     );  
     return result.rows[0];
   }
