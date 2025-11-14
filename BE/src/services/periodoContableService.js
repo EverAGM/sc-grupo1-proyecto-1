@@ -33,6 +33,28 @@ class PeriodoContableService {
         return result.rows;
     }
 
+    async actualizarPeriodoContable(id, datos) {
+        const { fecha_inicio, fecha_fin, estado } = datos;
+
+        const result = await db.query(
+            `UPDATE periodos_contables 
+             SET fecha_inicio = $1, fecha_fin = $2, estado = $3 
+             WHERE id_periodo = $4 
+             RETURNING *`,
+            [fecha_inicio, fecha_fin, estado, id]
+        );
+
+        return result.rows[0];
+    }
+
+    async eliminarPeriodoContable(id) {
+        const result = await db.query(
+            "DELETE FROM periodos_contables WHERE id_periodo = $1 RETURNING *",
+            [id]
+        );
+        return result.rows[0];
+    }
+
 }
 
 export default new PeriodoContableService();
