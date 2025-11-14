@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { obtenerCuentas, obtenerCuentaPorId, crearCuentaContable, actualizarCuentaContable, eliminarCuentaContable } from "../services/cuentasService";
 import { Button, Input, Select, Modal } from "antd";
+import { Link } from "react-router-dom";
 import "./CuentasContablesPage.css";
 
 const { Option } = Select;
@@ -245,6 +246,8 @@ export default function CuentasContables() {
     <div className="cuentas-contables">
       <header className="page-header">
         <h1>Cuentas Contables</h1>
+
+        <Link to="/" className="back-link-header">Volver al inicio</Link>
       </header>
 
       <div className="dashboard-grid">
