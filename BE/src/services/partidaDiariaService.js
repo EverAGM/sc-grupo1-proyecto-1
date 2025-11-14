@@ -117,6 +117,27 @@ class PartidaDiariaService {
     );
     return result.rows;
   }
+
+  async eliminarPartidaDiaria(id) {
+    const result = await db.query(
+      `DELETE FROM partida_diaria WHERE id_partida_diaria = $1 RETURNING *`,
+      [id]
+    );
+    return result.rows[0];
+  }
+
+  async actualizarPartidaDiaria(id, datos) {
+    const { concepto, estado, id_periodo } = datos;
+
+    const result = await db.query(
+      `UPDATE partida_diaria 
+         SET concepto = $1, estado = $2, id_periodo = $3 
+         WHERE id_partida_diaria = $4 
+         RETURNING *`,
+      [concepto, estado, id_periodo, id]
+    );
+    return result.rows[0];   
+  }
 }
 
 export default new PartidaDiariaService();

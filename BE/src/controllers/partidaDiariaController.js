@@ -148,4 +148,91 @@ export const obtenerPartidasPorFechas = async (req, res) => {
             message: 'Error interno del servidor'
         });
     }
-};  
+};
+
+export const eliminarPartidaDiaria = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const id_partida = parseInt(id);
+        if (isNaN(id_partida) || id_partida <=0){//
+            return res.status(400).json({
+                success: false,
+                message: 'El ID porporcionado no es un número entero positivo válido'
+            });
+        }
+
+        const eliminado = await partidaDiariaService.eliminarPartidaDiaria(id);
+
+        if (!eliminado) {
+            return res.status(404).json({
+                success: false,
+                message: 'Partida diaria no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Partida diaria eliminada exitosamente'
+        });
+    } catch (error) {
+
+        if (error.code === "23503" || error.code==="23001") {
+            return res.status(409).json({
+                success: false,
+                message: 'No se puede eliminar la partida diaria porque tiene transacciones contables asociadas.'
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+export const actualizarPartidaDiaria = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { concepto, estado, id_periodo } = req.body;
+
+        const id_partida = parseInt(id);
+        if (isNaN(id_partida) || id_partida <=0){//
+            return res.status(400).json({
+                success: false,
+                message: 'El ID porporcionado no es un número entero positivo válido'
+            });
+        }
+
+        const datosActualizar = {};
+        if (concepto !== undefined) datosActualizar.concepto = concepto;
+        if (estado !== undefined) datosActualizar.estado = estado;
+        if (id_periodo !== undefined) datosActualizar.id_periodo = id_periodo;
+
+        const actualizado = await partidaDiariaService.actualizarPartidaDiaria(id, datosActualizar);
+
+        if (!actualizado) {
+            return res.status(404).json({
+                success: false,
+                message: 'Partida diaria no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Partida diaria actualizada exitosamente',
+            data: actualizado
+        });
+    } catch (error) {
+        if (error.message === "PeriodoContableNotFound") {
+            return res.status(404).json({ // Se usa 404 porque el recurso referenciado no existe
+                success: false,
+                message: "El período contable especificado no existe."
+            });
+        }
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
