@@ -117,3 +117,82 @@ export const verPeriodosContables = async (req, res) => {
         });
     }
 };
+
+export const eliminarPeriodoContable = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const id_N = parseInt(id);
+        if(isNaN(id_N) || id_N <=0){
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del periodo debe ser un número entero positivo válido.'
+            });
+        }
+
+        const periodoEliminado = await periodoContableService.eliminarPeriodoContable(id);
+
+        if (!periodoEliminado) {
+            return res.status(404).json({
+                success: false,
+                message: 'Periodo contable no encontrado'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Periodo contable eliminado exitosamente',
+        });
+    } catch (error) {
+
+        if (error.code === '23503' || error.code === '23001') { // Violación de clave foránea
+            return res.status(409).json({
+                success: false,
+                message: 'No se puede eliminar el periodo contable porque está asociado a otros registros.'
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
+
+export const actualizarPeriodoContable = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const id_N = parseInt(id);
+        if(isNaN(id_N) || id_N <=0){
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del periodo debe ser un número entero positivo válido.'
+            });
+        }
+
+        const { fecha_inicio, fecha_fin, estado } = req.body;
+
+        const periodoActualizado = await periodoContableService.actualizarPeriodoContable(id, {
+            fecha_inicio,
+            fecha_fin,
+            estado
+        });
+
+        if (!periodoActualizado) {
+            return res.status(404).json({
+                success: false,
+                message: 'Periodo contable no encontrado'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Periodo contable actualizado exitosamente',
+            data: periodoActualizado
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};

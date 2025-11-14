@@ -63,6 +63,27 @@ class TransaccionContableService {
     );
     return result.rows;
   }
+
+  async eliminarTransaccionContable(id) {
+    const result = await db.query(
+      `DELETE FROM transacciones_contables WHERE id_transaccion = $1 RETURNING *`,
+      [id]
+    );
+    return result.rows[0];
+  }
+
+  async actualizarTransaccionContable(id, datos) {
+    const { cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion } = datos;
+
+    const result = await db.query(
+      `UPDATE transacciones_contables 
+         SET cuenta_id = $1, monto = $2, tipo_transaccion = $3, partida_diaria_id = $4, fecha_operacion = $5
+         WHERE id_transaccion = $6
+         RETURNING *`,
+      [cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion, id]
+    );
+    return result.rows[0];  
+  }
 }
 
 export default new TransaccionContableService();
