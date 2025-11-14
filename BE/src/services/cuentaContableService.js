@@ -113,7 +113,21 @@ class CuentaContableService {
     );
 
     return result.rows[0];
-  }   
+  }
+
+  async actualizarCuentaContable(id, datos) {
+    const { nombre, tipo, categoria, parent_id } = datos;
+
+    const result = await db.query(
+      `UPDATE cuentas_contables 
+         SET nombre = $1, tipo = $2, categoria = $3, padre_id = $4 
+         WHERE id_cuenta = $5 
+         RETURNING *`,
+      [nombre, tipo, categoria, parent_id, id]
+    );
+    
+    return result.rows[0];
+  }
 }
 
 export default new CuentaContableService();

@@ -139,7 +139,7 @@ export const eliminarCuentaContable = async (req, res) => {
             message: 'Cuenta contable eliminada exitosamente'
         });
     } catch (error) {
-        if (error.code === '23503') {
+        if (error.code === '23503' || error.code === '23001') {
              return res.status(409).json({ 
                 success: false,
                 message: 'No se puede eliminar la cuenta. Tiene registros asociados que dependen de ella.'
@@ -151,3 +151,38 @@ export const eliminarCuentaContable = async (req, res) => {
         });
     }
 }
+
+export const actualizarCuentaContable = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const datos = req.body;
+
+        const idNum = parseInt(id);
+        if (isNaN(idNum) || idNum <= 0) {
+             return res.status(400).json({
+                success: false,
+                message: 'El ID proporcionado debe ser un número entero positivo válido.'
+            });
+        }
+
+        const cuentaActualizada = await cuentaContableService.actualizarCuentaContable(idNum, datos);
+        if (!cuentaActualizada) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cuenta contable no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Cuenta contable actualizada exitosamente',
+            data: cuentaActualizada
+        });
+    } catch (error) {
+        console.error('Error al actualizar cuenta contable:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+};
