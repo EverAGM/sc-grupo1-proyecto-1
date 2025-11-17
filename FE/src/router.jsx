@@ -5,6 +5,7 @@ import BalancePage from "./pages/BalancePage";
 import ReportesPage from "./pages/ReportesPage";
 import PeriodosPage  from "./pages/PeriodosPage";
 import CuentasContablesPage from "./pages/CuentasContablesPage";
+import FacturacionPage from "./pages/FacturacionPage";
 
 export default function AppRouter() {
   return (
@@ -16,6 +17,7 @@ export default function AppRouter() {
         <Route path="/reportes" element={<ReportesPage />} />
         <Route path="/periodos" element={<PeriodosPage />} />
         <Route path="/cuentas-contables" element={<CuentasContablesPage />} />
+        <Route path="/facturacion" element={<FacturacionPage />} />
       </Routes>
     </BrowserRouter>
   );

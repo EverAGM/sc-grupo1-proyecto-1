@@ -253,6 +253,41 @@
   background: #e5edff;
 }
 
+/* Estilos especiales para el botón de Facturación Electrónica */
+.cc-nav-btn-highlight {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+}
+
+.cc-nav-btn-highlight::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.cc-nav-btn-highlight:hover::before {
+  left: 100%;
+}
+
+.cc-nav-btn-highlight:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+}
+
+.cc-nav-btn-highlight:active {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+}
+
 @media (max-width: 900px) {
   .cc-grid {
     grid-template-columns: 1fr;

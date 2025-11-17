@@ -34,6 +34,12 @@ export default function ContaCorpDashboard() {
             >
             Periodos
             </button>
+            <button
+            className="cc-nav-btn cc-nav-btn-highlight"
+            onClick={() => navigate("/facturacion")}
+            >
+            Facturación Electrónica
+            </button>
         </nav>
 
         <main className="cc-main">
