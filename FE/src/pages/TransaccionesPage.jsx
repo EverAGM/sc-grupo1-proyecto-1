@@ -8,7 +8,8 @@ import {
   crearPartida,
   obtenerPartidaPorId,
 } from "../services/partidaDiariaService";
-import { FaHome } from "react-icons/fa";
+import { FaHome, FaUndo, FaPlus, FaTimes, FaTrash, FaSave } from "react-icons/fa";
+import { MdBarChart } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { obtenerPeriodos } from "../services/periodosService";
 import "./TransaccionesPage.css";
@@ -405,6 +406,8 @@ export default function TransaccionesPage() {
           className="btn-exportar"
           disabled={isExporting || isSaving}
         >
+          <MdBarChart />
+          
           {isExporting ? (
             <>
               <span className="spinner" aria-hidden></span>Exportando...
@@ -418,7 +421,8 @@ export default function TransaccionesPage() {
           className="btn-crear"
           disabled={isSaving || isExporting}
         >
-          Crear Nueva Partida
+          <FaPlus />
+          <span>Crear Nueva Partida</span>
         </button>
       </div>
 
@@ -467,8 +471,9 @@ export default function TransaccionesPage() {
           </select>
         </div>
         <button onClick={resetFilters} className="btn-secondary">
-          Limpiar
-        </button>
+                  <FaUndo />
+                  <span>Limpiar Filtros</span>
+                </button>
       </div>
 
       <div className="table-container">
@@ -651,7 +656,8 @@ export default function TransaccionesPage() {
                     className="btn-crear"
                     disabled={isSaving}
                   >
-                    Agregar
+                    <FaPlus />
+                    <span>Agregar</span>
                   </button>
                 </div>
 
@@ -751,7 +757,8 @@ export default function TransaccionesPage() {
                               style={{ padding: "4px 8px" }}
                               disabled={isSaving}
                             >
-                              Eliminar
+                              <FaTrash />
+                              <span>Eliminar</span>
                             </button>
                           </td>
                         </tr>
@@ -769,7 +776,8 @@ export default function TransaccionesPage() {
                 className="btn-cancelar"
                 disabled={isSaving}
               >
-                Cancelar
+                <FaTimes />
+                <span>Cancelar</span>
               </button>
               <button
                 type="button"
@@ -777,6 +785,7 @@ export default function TransaccionesPage() {
                 className="btn-crear"
                 disabled={transTemp.length === 0 || isSaving}
               >
+                <FaSave />
                 {isSaving ? (
                   <>
                     <span className="spinner" aria-hidden></span>

@@ -5,7 +5,7 @@ import {
   actualizarPeriodo, 
   eliminarPeriodo 
 } from "../services/periodosService";
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import { Link } from "react-router-dom";
 import { FaPlus, FaHome, FaUndo, FaPen, FaTrash, FaSave, FaTimes } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
@@ -558,7 +558,18 @@ export default function PeriodosPage() {
           </div>
         </div>
       )}
-
+      <ToastContainer
+          position="top-right"
+          autoClose={4000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
     </div>
   );
 }

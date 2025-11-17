@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { obtenerCuentas, obtenerCuentaPorId, crearCuentaContable, actualizarCuentaContable, eliminarCuentaContable } from "../services/cuentasService";
 import { Button, Input, Select, Modal } from "antd";
 import { Link } from "react-router-dom";
+import { toast, ToastContainer } from 'react-toastify';
+import { FaHome, FaPlus, FaPen, FaTrash, FaTimes, FaSave } from "react-icons/fa";
 import "./CuentasContablesPage.css";
+import 'react-toastify/dist/ReactToastify.css';
 
 const { Option } = Select;
 
@@ -21,38 +24,11 @@ export default function CuentasContables() {
   const [isEditing, setIsEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Alertas y modales
-  const [alertModal, setAlertModal] = useState({
-    visible: false,
-    title: "",
-    content: "",
-  });
-
+  // Modal de borrado (se mantiene intacto)
   const [deleteModal, setDeleteModal] = useState({
     visible: false,
     cuenta: null,
   });
-
-  const openAlert = ({ title, content }) => {
-    setAlertModal({
-      visible: true,
-      title,
-      content,
-    });
-  };
-
-  const closeAlert = () => {
-    setAlertModal((prev) => ({ ...prev, visible: false }));
-  };
-
-  useEffect(() => {
-    if (alertModal.visible) {
-      const timer = setTimeout(() => {
-        setAlertModal((prev) => ({ ...prev, visible: false }));
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [alertModal.visible]);
 
   const cargarCuentas = async () => {
     try {
@@ -61,10 +37,7 @@ export default function CuentasContables() {
       setCuentas(cuentasData || []);
     } catch (err) {
       console.error("Error al cargar cuentas:", err);
-      openAlert({
-        title: "Error",
-        content: "Error al cargar las cuentas contables.",
-      });
+      toast.error("Error al cargar las cuentas contables.");
     } finally {
       setLoading(false);
     }
@@ -74,10 +47,7 @@ export default function CuentasContables() {
     try {
       const cuentaData = await obtenerCuentaPorId(id);
       if (!cuentaData) {
-        openAlert({
-          title: "Cuenta no encontrada",
-          content: "No se encontró la cuenta seleccionada.",
-        });
+        toast.warn("No se encontró la cuenta seleccionada.");
         return;
       }
       setFormData({
@@ -90,10 +60,7 @@ export default function CuentasContables() {
       setIsEditing(true);
     } catch (err) {
       console.error("Error al obtener cuenta:", err);
-      openAlert({
-        title: "Error",
-        content: "Error al obtener la cuenta contable.",
-      });
+      toast.error("Error al obtener la cuenta contable.");
     }
   };
 
@@ -112,30 +79,17 @@ export default function CuentasContables() {
 
     try {
       if (!payload.nombre || !payload.tipo || !payload.categoria) {
-        openAlert({
-          title: "Campos obligatorios",
-          content: "Nombre, tipo y categoría son obligatorios.",
-        });
+        toast.warn("Nombre, tipo y categoría son obligatorios.");
         setSubmitting(false);
         return;
       }
 
       if (isEditing && selectedCuenta) {
         await actualizarCuentaContable(selectedCuenta.id_cuenta, payload);
-
-        openAlert({
-          title: "Cuenta actualizada",
-          content: `La cuenta "${payload.nombre}" se actualizó correctamente.`,
-        });
+        toast.success(`La cuenta "${payload.nombre}" se actualizó correctamente.`);
       } else {
         const nueva = await crearCuentaContable(payload);
-
-        openAlert({
-          title: "Cuenta creada",
-          content: `La cuenta "${
-            nueva?.nombre || payload.nombre
-          }" se creó correctamente.`,
-        });
+        toast.success(`La cuenta "${nueva?.nombre || payload.nombre}" se creó correctamente.`);
       }
 
       await cargarCuentas();
@@ -145,15 +99,9 @@ export default function CuentasContables() {
       const msg = err.message?.toLowerCase() || "";
 
       if (err.isDuplicate || msg.includes("ya existe una cuenta contable")) {
-        openAlert({
-          title: "Cuenta existente",
-          content: "Ya existe una cuenta contable con ese nombre.",
-        });
+        toast.error("Ya existe una cuenta contable con ese nombre.");
       } else {
-        openAlert({
-          title: "Error al guardar",
-          content: "Ocurrió un error al guardar la cuenta contable.",
-        });
+        toast.error("Ocurrió un error al guardar la cuenta contable.");
       }
     } finally {
       setSubmitting(false);
@@ -200,10 +148,7 @@ export default function CuentasContables() {
         prev.filter((c) => c.id_cuenta !== cuenta.id_cuenta)
       );
 
-      openAlert({
-        title: "Cuenta eliminada",
-        content: `La cuenta "${cuenta.nombre}" se eliminó correctamente.`,
-      });
+      toast.success(`La cuenta "${cuenta.nombre}" se eliminó correctamente.`);
     } catch (err) {
       console.error("Error al eliminar cuenta:", err);
       const msg = err.message?.toLowerCase() || "";
@@ -215,17 +160,9 @@ export default function CuentasContables() {
         msg.includes("fk_cuenta_padre") ||
         msg.includes("foreign key")
       ) {
-        openAlert({
-          title: "No se puede eliminar",
-          content:
-            "No se puede eliminar esta cuenta porque tiene cuentas hijas asociadas.",
-        });
+        toast.error("No se puede eliminar esta cuenta porque tiene cuentas hijas asociadas.");
       } else {
-        openAlert({
-          title: "Error al eliminar",
-          content:
-            "Ocurrió un error al intentar eliminar la cuenta contable.",
-        });
+        toast.error("Ocurrió un error al intentar eliminar la cuenta contable.");
       }
     } finally {
       cerrarDeleteModal();
@@ -247,7 +184,7 @@ export default function CuentasContables() {
       <header className="page-header">
         <h1>Cuentas Contables</h1>
 
-        <Link to="/" className="back-link-header">Volver al inicio</Link>
+        <Link to="/" className="back-link-header"><FaHome /> Volver al inicio</Link>
       </header>
 
       <div className="dashboard-grid">
@@ -305,11 +242,11 @@ export default function CuentasContables() {
             </div>
 
             <div className="form-actions">
-              <Button type="primary" htmlType="submit" block loading={submitting}>
+              <Button type="primary" htmlType="submit" block loading={submitting} icon={isEditing ? <FaSave /> : <FaPlus />}>
                 {isEditing ? "Actualizar Cuenta" : "Crear Cuenta"}
               </Button>
               {isEditing && (
-                <Button style={{ marginTop: 8 }} onClick={resetForm} block disabled={submitting}>
+                <Button style={{ marginTop: 8 }} onClick={resetForm} block disabled={submitting} icon={<FaTimes />}>
                   Cancelar edición
                 </Button>
               )}
@@ -334,7 +271,7 @@ export default function CuentasContables() {
                   <th>Tipo</th>
                   <th>Categoría</th>
                   <th>Padre</th>
-                  <th>Acciones</th>
+                  <th>AccIONES</th>
                 </tr>
               </thead>
               <tbody>
@@ -351,11 +288,11 @@ export default function CuentasContables() {
                         <td>{cuenta.categoria}</td>
                         <td>{getNombrePadre(cuenta)}</td>
                         <td>
-                          <Button size="small" onClick={() => cargarCuentaPorId(cuenta.id_cuenta)}>
+                          <Button size="small" icon={<FaPen />} onClick={() => cargarCuentaPorId(cuenta.id_cuenta)}>
                             Editar
                           </Button>
                           {!tieneHijos && (
-                            <Button size="small" danger style={{ marginLeft: 8 }}
+                            <Button size="small" danger style={{ marginLeft: 8 }} icon={<FaTrash />}
                               onClick={() => handleEliminarCuentaClick(cuenta)}>
                               Eliminar
                             </Button>
@@ -377,11 +314,6 @@ export default function CuentasContables() {
         </section>
       </div>
 
-      <Modal open={alertModal.visible} title={alertModal.title} footer={null}
-        onCancel={closeAlert} centered>
-        <p>{alertModal.content}</p>
-      </Modal>
-
       <Modal open={deleteModal.visible} title="Confirmar eliminación" onCancel={cerrarDeleteModal}
         onOk={confirmarEliminarCuenta} okText="Eliminar" okButtonProps={{ danger: true }}
         cancelText="Cancelar" centered>
@@ -390,6 +322,19 @@ export default function CuentasContables() {
           {deleteModal.cuenta?.codigo} - {deleteModal.cuenta?.nombre}"?
         </p>
       </Modal>
+      <ToastContainer
+          position="top-right"
+          autoClose={4000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
     </div>
+    
   );
 }

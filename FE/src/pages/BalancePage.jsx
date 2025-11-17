@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { obtenerBalanceContable, verificarIntegridadContable } from "../services/balanceService";
+import { toast } from 'react-toastify';
 import "./BalancePage.css";
+import {
+  MdRefresh,
+  MdCheck,
+  MdWarning,
+  MdKeyboardArrowDown
+} from "react-icons/md";
+import { CgSpinner } from "react-icons/cg";
 
 export default function BalancePage() {
   const [balanceData, setBalanceData] = useState({
@@ -14,14 +22,12 @@ export default function BalancePage() {
 
   const [transaccionesIncompletas, setTransaccionesIncompletas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [integridadData, setIntegridadData] = useState(null);
 
   // Cargar datos del balance
   const cargarBalance = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       const resultado = await obtenerBalanceContable();
       
@@ -29,11 +35,11 @@ export default function BalancePage() {
         setBalanceData(resultado.data);
         setTransaccionesIncompletas(resultado.data.transaccionesIncompletas || []);
       } else {
-        setError(resultado.error || 'Error al cargar el balance');
+        toast.error(resultado.error || 'Error al cargar el balance');
       }
     } catch (err) {
       console.error('Error al cargar balance:', err);
-      setError('Error de conexión al cargar el balance');
+      toast.error('Error de conexión al cargar el balance');
     } finally {
       setLoading(false);
     }
@@ -78,25 +84,8 @@ export default function BalancePage() {
         <h1>Verificación de Balance</h1>
         <div className="verificar-balance-card">
           <div className="loading-state">
-            <span>⏳ Cargando datos del balance...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Mostrar error
-  if (error) {
-    return (
-      <div className="balance-page">
-        <h1>Verificación de Balance</h1>
-        <div className="verificar-balance-card error-card">
-          <div className="error-state">
-            <span className="error-icon">❌</span>
-            <p>Error al cargar el balance: {error}</p>
-            <button onClick={cargarBalance} className="retry-btn">
-              🔄 Reintentar
-            </button>
+            <CgSpinner className="spinner-icon" />
+            <span>Cargando datos del balance...</span>
           </div>
         </div>
       </div>
@@ -114,7 +103,7 @@ export default function BalancePage() {
             Última verificación: {new Date(balanceData.fechaVerificacion).toLocaleString()}
           </span>
           <button onClick={cargarBalance} className="actualizar-btn" disabled={loading}>
-            🔄 Actualizar
+            <MdRefresh /> Actualizar
           </button>
         </div>
       )}
@@ -126,12 +115,12 @@ export default function BalancePage() {
           <div className="balance-status">
             {balanceData.cuadrado ? (
               <div className="status-cuadrado">
-                <span className="checkmark">✓</span>
+                <span className="checkmark"><MdCheck /></span>
                 <span>Cuadrado</span>
               </div>
             ) : (
               <div className="status-descuadrado">
-                <span className="error-mark">⚠️</span>
+                <span className="error-mark"><MdWarning /></span>
                 <span>Descuadrado</span>
                 <span className="diferencia">
                   Diferencia: {formatMonto(Math.abs(balanceData.diferencia))}
@@ -165,7 +154,7 @@ export default function BalancePage() {
                   </option>
                 ))}
               </select>
-              <span className="dropdown-arrow">▼</span>
+              <span className="dropdown-arrow"><MdKeyboardArrowDown /></span>
             </div>
           </div>
 

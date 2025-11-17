@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import "./IndexPage.css";
 import BalancePage from "./BalancePage.jsx";
 import ReportesPage from "./ReportesPage.jsx";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function ContaCorpDashboard() {
     const navigate = useNavigate();
@@ -45,6 +47,20 @@ export default function ContaCorpDashboard() {
             </article>
             </section>
         </main>
+        
+        {/* Contenedor para las notificaciones toast */}
+        <ToastContainer
+          position="top-right"
+          autoClose={4000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
         </div>
     );
 }

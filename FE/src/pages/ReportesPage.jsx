@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { exportarExcel, exportarHTML, obtenerEstadoReportes } from "../services/reportesService";
+import { toast } from 'react-toastify';
 import "./ReportesPage.css";
+import {
+  MdBarChart,
+  MdLanguage,
+  MdCheckCircle,
+  MdError
+} from "react-icons/md";
+import { CgSpinner } from "react-icons/cg";
 
 export default function ReportesPage() {
   const [reporteData, setReporteData] = useState({
@@ -22,6 +30,7 @@ export default function ReportesPage() {
       setReporteData(estado);
     } catch (error) {
       console.error('Error al cargar estado de reportes:', error);
+      toast.error('Error al cargar estado de reportes');
     }
   };
 
@@ -32,12 +41,13 @@ export default function ReportesPage() {
       const resultado = await exportarExcel();
       
       if (resultado.success) {
-        // En un entorno real, aquí descargaríamos el archivo
-        alert(`✅ ${resultado.message}\nArchivo: ${resultado.data.filename}`);
+        toast.success(resultado.message);
+      } else {
+        throw new Error(resultado.error || 'Error desconocido');
       }
     } catch (error) {
       console.error('Error al exportar Excel:', error);
-      alert('❌ Error al generar el archivo Excel');
+      toast.error('Error al generar el archivo Excel');
     } finally {
       setLoading(prev => ({ ...prev, excel: false }));
     }
@@ -50,12 +60,13 @@ export default function ReportesPage() {
       const resultado = await exportarHTML();
       
       if (resultado.success) {
-        // En un entorno real, aquí descargaríamos el archivo
-        alert(`✅ ${resultado.message}\nArchivo: ${resultado.data.filename}`);
+        toast.success(resultado.message);
+      } else {
+        throw new Error(resultado.error || 'Error desconocido');
       }
     } catch (error) {
       console.error('Error al exportar HTML:', error);
-      alert('❌ Error al generar el archivo HTML');
+      toast.error('Error al generar el archivo HTML');
     } finally {
       setLoading(prev => ({ ...prev, html: false }));
     }
@@ -71,7 +82,15 @@ export default function ReportesPage() {
           <h2>Export</h2>
           <div className="export-info">
             <span className="status">
-              {reporteData.disponible ? '🟢 Reportes disponibles' : '🔴 Reportes no disponibles'}
+              {reporteData.disponible ? (
+                <>
+                  <MdCheckCircle className="status-icon success" /> Reportes disponibles
+                </>
+              ) : (
+                <>
+                  <MdError className="status-icon error" /> Reportes no disponibles
+                </>
+              )}
             </span>
             <span className="last-update">
               Última actualización: {reporteData.ultimaActualizacion}
@@ -94,7 +113,9 @@ export default function ReportesPage() {
               onClick={handleExportExcel}
               disabled={!reporteData.disponible || loading.excel}
             >
-              <span className="btn-icon">{loading.excel ? '⏳' : '📊'}</span>
+              <span className="btn-icon">
+                {loading.excel ? <CgSpinner className="spinner-icon" /> : <MdBarChart />}
+              </span>
               {loading.excel ? 'Generando...' : 'Exportar Excel'}
             </button>
             <button 
@@ -102,7 +123,9 @@ export default function ReportesPage() {
               onClick={handleExportHTML}
               disabled={!reporteData.disponible || loading.html}
             >
-              <span className="btn-icon">{loading.html ? '⏳' : '🌐'}</span>
+              <span className="btn-icon">
+                {loading.html ? <CgSpinner className="spinner-icon" /> : <MdLanguage />}
+              </span>
               {loading.html ? 'Generando...' : 'Exportar HTML'}
             </button>
           </div>
