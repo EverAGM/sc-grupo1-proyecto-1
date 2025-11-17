@@ -14,6 +14,12 @@ import { obtenerPeriodos } from "../services/periodosService";
 import "./TransaccionesPage.css";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
+import { DatePicker } from "antd";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import "antd/dist/reset.css";
+
+dayjs.extend(customParseFormat);
 
 const trimestresBase = [
   { key: "1", label: "Trimestre 1 (Ene - Mar)" },
@@ -116,80 +122,6 @@ export default function TransaccionesPage() {
     }
   }, [activePeriodo]);
 
-  const parseDisplayToIso = (display) => {
-    if (!display) return null;
-    const m = display.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (!m) return null;
-    const day = parseInt(m[1], 10);
-    const month = parseInt(m[2], 10);
-    const year = parseInt(m[3], 10);
-
-    if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return null;
-    if (month < 1 || month > 12) return null;
-    if (year < 1900 || year > 2100) return null;
-
-    const isLeap = (y) => (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0));
-    const daysInMonth = (mth, y) => {
-      if (mth === 2) return isLeap(y) ? 29 : 28;
-      return [1, 3, 5, 7, 8, 10, 12].includes(mth) ? 31 : 30;
-    };
-
-    const maxDay = daysInMonth(month, year);
-    if (day < 1 || day > maxDay) return null;
-    const d = new Date(Date.UTC(year, month - 1, day));
-    return d.toISOString().split("T")[0];
-  };
-
-  const maskDateInput = (raw) => {
-    if (raw == null) return "";
-    const digits = raw.replace(/\D/g, "").slice(0, 8); // ddmmyyyy max 8
-    let parts = [];
-    const day = digits.slice(0, 2);
-    let month = digits.slice(2, 4);
-    const year = digits.slice(4, 8);
-    if (month.length > 0) {
-      const mNum = parseInt(month, 10);
-      if (!Number.isNaN(mNum) && mNum > 12) {
-        month = "12".slice(0, month.length);
-      }
-    }
-    if (day.length === 2 && month.length === 2) {
-      const dayNum = parseInt(day, 10);
-      const monthNum = parseInt(month, 10);
-      let maxDay = 31;
-      if (!Number.isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
-        if (year.length === 4) {
-          const yNum = parseInt(year, 10);
-          const isLeap = (y) => (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0));
-          if (monthNum === 2) maxDay = isLeap(yNum) ? 29 : 28;
-          else if ([4, 6, 9, 11].includes(monthNum)) maxDay = 30;
-          else maxDay = 31;
-        } else {
-          if (monthNum === 2) maxDay = 29;
-          else if ([4, 6, 9, 11].includes(monthNum)) maxDay = 30;
-          else maxDay = 31;
-        }
-
-        if (!Number.isNaN(dayNum) && dayNum > maxDay) {
-          const repl = String(maxDay).padStart(2, "0");
-          if (repl.length === 2) {
-            const newDigits = repl + month + year;
-            const newDay = newDigits.slice(0, 2);
-            var _maskedDay = newDay;
-          }
-        }
-      }
-    }
-    if (digits.length <= 2) {
-      parts = [typeof _maskedDay !== 'undefined' ? _maskedDay : day];
-    } else if (digits.length <= 4) {
-      parts = [typeof _maskedDay !== 'undefined' ? _maskedDay : day, month || digits.slice(2)];
-    } else {
-      parts = [typeof _maskedDay !== 'undefined' ? _maskedDay : day, month || digits.slice(2, 4), year];
-    }
-    return parts.filter(Boolean).join('/');
-  };
-
   // helper: format ISO yyyy-mm-dd -> display dd/mm/yyyy
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -257,15 +189,13 @@ export default function TransaccionesPage() {
 
   const agregarTransaccion = () => {
     if (!formTrans.cuenta_id || !formTrans.monto) return;
-    // validate fecha_operacion if provided
-    if (formTrans.fecha_operacion && !parseDisplayToIso(formTrans.fecha_operacion)) {
-      toast.warn("Formato de Fecha Operación inválido. Use DD/MM/YYYY");
-      return;
-    }
-
+    
+    // DatePicker ensures valid dates within range, so no need for manual validation
     const todayIso = new Date().toISOString().split("T")[0];
-    const fechaIso = formTrans.fecha_operacion_iso || parseDisplayToIso(formTrans.fecha_operacion) || todayIso;
-    const fechaDisplay = formTrans.fecha_operacion && formTrans.fecha_operacion.trim() !== "" ? formTrans.fecha_operacion : formatDate(fechaIso);
+    const fechaIso = formTrans.fecha_operacion_iso || todayIso;
+    const fechaDisplay = formTrans.fecha_operacion && formTrans.fecha_operacion.trim() !== "" 
+      ? formTrans.fecha_operacion 
+      : formatDate(fechaIso);
 
     setTransTemp([
       ...transTemp,
@@ -398,9 +328,9 @@ export default function TransaccionesPage() {
 
       if (nuevaPartida?.id_partida_diaria) {
         for (const t of transTemp) {
+          // Ensure fecha_operacion sent to backend is ISO (yyyy-mm-dd).
           const fechaIsoToSend =
             t.fecha_operacion_iso ||
-            parseDisplayToIso(t.fecha_operacion) ||
             new Date().toISOString().split("T")[0];
 
           const payload = {
@@ -745,24 +675,43 @@ export default function TransaccionesPage() {
 
                   <div className="form-group" style={{ flex: 1 }}>
                     <label>Fecha Operación</label>
-                    <input
-                      type="text"
+                    <DatePicker
+                      value={
+                        formTrans.fecha_operacion_iso
+                          ? dayjs(formTrans.fecha_operacion_iso)
+                          : null
+                      }
+                      format="DD/MM/YYYY"
                       placeholder="DD/MM/YYYY"
-                      inputMode="numeric"
-                      value={formTrans.fecha_operacion}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        const masked = maskDateInput(raw);
-                        const iso = parseDisplayToIso(masked);
-                        setFormTrans({
-                          ...formTrans,
-                          fecha_operacion: masked,
-                          fecha_operacion_iso: iso ? iso : formTrans.fecha_operacion_iso,
-                        });
+                      onChange={(date) => {
+                        if (date) {
+                          const iso = date.format("YYYY-MM-DD");
+                          const display = date.format("DD/MM/YYYY");
+                          setFormTrans({
+                            ...formTrans,
+                            fecha_operacion: display,
+                            fecha_operacion_iso: iso,
+                          });
+                        } else {
+                          const todayIso = new Date().toISOString().split("T")[0];
+                          setFormTrans({
+                            ...formTrans,
+                            fecha_operacion: formatDate(todayIso),
+                            fecha_operacion_iso: todayIso,
+                          });
+                        }
+                      }}
+                      disabledDate={(current) => {
+                        if (!activePeriodo || !activePeriodo.fecha_inicio || !activePeriodo.fecha_fin) {
+                          return false;
+                        }
+                        const start = dayjs(activePeriodo.fecha_inicio).startOf("day");
+                        const end = dayjs(activePeriodo.fecha_fin).endOf("day");
+                        return current && (current.isBefore(start) || current.isAfter(end));
                       }}
                       disabled={isSaving}
-                      pattern="\d{2}/\d{2}/\d{4}"
-                      title="Ingrese la fecha en formato DD/MM/YYYY"
+                      style={{ width: "100%" }}
+                      inputReadOnly={false}
                     />
                   </div>
                 </div>
