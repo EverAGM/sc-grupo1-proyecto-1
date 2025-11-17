@@ -1,6 +1,6 @@
 
 .cc-layout {
-  min-height: 100vh;
+  height: 100vh;
   background: #f5f6f8;
   display: flex;
   flex-direction: column;
