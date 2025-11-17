@@ -1,6 +1,7 @@
 import AppRouter from "./router";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import 'antd/dist/reset.css'; // Estilos de Ant Design
 
 function App() {
   return (
