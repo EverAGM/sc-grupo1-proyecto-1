@@ -1,38 +1,17 @@
 import cuentaContableService from "../services/cuentaContableService.js";
+import { cuentaContableValidator } from "../helpers/cuentaContableValidator.js";
 
 export const crearCuentaContable = async (req, res) => {
 
     try{
         const {nombre, tipo, categoria, parent_id} = req.body;
-        const parent_id_num = parent_id ? parseInt(parent_id) : null;
-        const nombre_L = (nombre || '').trim();
-        const tipo_L = (tipo || '').trim().toUpperCase();
-        const categoria_L = (categoria || '').trim().toUpperCase();
-
-        if (!nombre_L || !tipo_L || !categoria_L) {
-            return res.status(400).json({
-                success: false,
-                message: 'Los campos nombre, tipo y categoría son obligatorios.'
-            });
-        }
-
-        if (nombre_L.length > 100 || tipo_L.length > 20 || categoria_L.length > 50) {
-            return res.status(400).json({
-                success: false,
-                message: 'Longitud de campos excedida. Verifique nombre (max 100), tipo (max 20) y categoría (max 50).'
-            });
-        }
-
-        //no es obligatorio, cuando se ingresa un valor se valida
-        if (parent_id !== undefined && parent_id !== null && parent_id !== '' && (isNaN(parent_id_num) || parent_id_num <= 0)) {
-            return res.status(400).json({
-                success: false,
-                message: 'El ID de la cuenta padre debe ser un número entero positivo válido.'
-            });
-        }
+        const data = cuentaContableValidator(req.body);
 
             const nuevaCuenta = await cuentaContableService.crearCuentaContable({
-                nombre, tipo, categoria, parent_id
+                nombre : data.nombre_L, 
+                tipo : data.tipo_L,
+                categoria : data.categoria_L,
+                parent_id : data.parent_id_num
             });
 
         res.status(201).json({
@@ -58,10 +37,7 @@ export const crearCuentaContable = async (req, res) => {
         
         console.error('Error al crear cuenta contable:', error);
 
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -71,18 +47,12 @@ export const obtenerCuentaPorId = async (req, res) => {
 
         const idNum = parseInt(id);
         if (isNaN(idNum) || idNum <= 0) {
-             return res.status(400).json({
-                success: false,
-                message: 'El ID proporcionado debe ser un número entero positivo válido.'
-            });
+             throw new Error('IdInvalido: El ID proporcionado debe ser un número entero positivo válido');
         }
 
         const cuenta = await cuentaContableService.obtenerCuentaPorId(idNum);
         if (!cuenta) {
-            return res.status(404).json({
-                success: false,
-                message: 'Cuenta contable no encontrada'
-            });
+            throw new Error('CuentaNotFound: Cuenta contable no encontrada');
         }
 
         res.status(200).json({
@@ -91,10 +61,7 @@ export const obtenerCuentaPorId = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al obtener cuenta contable:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -107,10 +74,7 @@ export const verCuentasContables = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al obtener cuentas contables:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -120,18 +84,12 @@ export const eliminarCuentaContable = async (req, res) => {
 
         const idNum = parseInt(id);
         if (isNaN(idNum) || idNum <= 0) {
-             return res.status(400).json({
-                success: false,
-                message: 'El ID proporcionado debe ser un número entero positivo válido.'
-            });
+            throw new Error('IdInvalido: El ID proporcionado debe ser un número entero positivo válido.');
         }
 
         const resultado = await cuentaContableService.eliminarCuentaContable(idNum);
         if (!resultado) {
-            return res.status(404).json({
-                success: false,
-                message: 'Cuenta contable no encontrada o no se puede eliminar debido a restricciones.'
-            });
+            throw new Error('CuentaNotFound: Cuenta contable no encontrada o no se puede eliminar debido a restricciones.');
         }
 
         res.status(200).json({
@@ -139,16 +97,7 @@ export const eliminarCuentaContable = async (req, res) => {
             message: 'Cuenta contable eliminada exitosamente'
         });
     } catch (error) {
-        if (error.code === '23503' || error.code === '23001') {
-             return res.status(409).json({ 
-                success: false,
-                message: 'No se puede eliminar la cuenta. Tiene registros asociados que dependen de ella.'
-            });
-        }
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 }
 
@@ -159,18 +108,13 @@ export const actualizarCuentaContable = async (req, res) => {
 
         const idNum = parseInt(id);
         if (isNaN(idNum) || idNum <= 0) {
-             return res.status(400).json({
-                success: false,
-                message: 'El ID proporcionado debe ser un número entero positivo válido.'
-            });
+            throw new Error('IdInvalido: El ID proporcionado debe ser un número entero positivo válido.');
+            
         }
 
         const cuentaActualizada = await cuentaContableService.actualizarCuentaContable(idNum, datos);
         if (!cuentaActualizada) {
-            return res.status(404).json({
-                success: false,
-                message: 'Cuenta contable no encontrada'
-            });
+            throw new Error('CuentaNotFound: Cuenta contable no encontrada');
         }
 
         res.status(200).json({
@@ -180,9 +124,53 @@ export const actualizarCuentaContable = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al actualizar cuenta contable:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
+
+/**
+ * Mapea un error lanzado (throw) a la respuesta HTTP correspondiente (statusCode).
+ * Centraliza el manejo de errores de validación, negocio y base de datos.
+ * @param {Error} error - El objeto Error capturado en el bloque catch.
+ * @param {object} res - El objeto de respuesta de Express.
+ * @returns {object} Una respuesta JSON con el código de estado apropiado.
+ */
+function getThrow(error, res){
+    const specificErrors = {
+        'DatosFaltantes': 400,
+        'LongitudExcedida': 400,
+        'ParentIdInvalido': 400,
+        'IdInvalido': 400, 
+        'TipoInválido': 400,
+        'CuentaPadreNoEncontrada': 400, 
+        'YaExisteCuenta': 409, 
+        'CuentaNotFound': 404, 
+        '22008': 400,
+        '23505': 409,
+        '23503': 409,
+        '23001': 409, 
+    };
+    
+    const errorKey = error.code || error.message.split(':')[0].trim();
+    const statusCode = specificErrors[errorKey] || 500;
+    let message = error.message;
+
+    if (statusCode === 500) {
+        console.error("Error interno no mapeado:", error);
+        message = "Error interno del servidor";
+    } 
+    else if (errorKey in specificErrors && !error.code) { 
+        message = error.message.split(':').slice(1).join(':').trim() || error.message;
+    }
+    else if (errorKey === '23505') {
+        message = 'Ya existe un registro con esos datos. Se violó una restricción de unicidad.';
+    }
+    else if (errorKey === '23503' || errorKey === '23001') {
+        message = 'No se puede eliminar la cuenta. Tiene registros asociados que dependen de ella.';
+    }
+
+    return res.status(statusCode).json({
+      success: false,
+      message: message,
+    });
+}

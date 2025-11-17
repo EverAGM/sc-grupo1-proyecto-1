@@ -22,7 +22,17 @@ class PartidaDiariaService {
 
   async obtenerPartidaPorId(id) {
     const result = await db.query(
-      `SELECT * FROM partida_diaria WHERE id_partida_diaria = $1`,
+      `SELECT 
+            pd.*,                  
+            pc.fecha_fin 
+        FROM 
+            partida_diaria pd
+        JOIN 
+            periodos_contables pc 
+            ON pd.id_periodo = pc.id_periodo 
+        WHERE 
+            pd.id_partida_diaria = $1`,
+      ///`SELECT * FROM partida_diaria WHERE id_partida_diaria = $1`,
       [id]
     );
     return result.rows[0];

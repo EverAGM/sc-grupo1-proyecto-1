@@ -1,45 +1,20 @@
+import partidaDiariaService from "../services/partidaDiariaService.js";
 import transaccionContableService from "../services/transaccionContableService.js";
+import {patronFecha, parseFecha} from "../helpers/fechaValidator.js";
+import {transaccionValidator} from "../helpers/transaccionValidator.js"
 
 export const crearTransaccionContable = async (req, res) => {
   try {
     const { cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion } = req.body;
 
-    if (!cuenta_id || !monto || !tipo_transaccion || !partida_diaria_id || !fecha_operacion) {
-      return res.status(400).json({
-        success: false,
-        message: "Faltan datos requeridos",
-      });
-    }
-
-    if (tipo_transaccion !== "DEBE" && tipo_transaccion !== "HABER") {
-      return res.status(400).json({
-        success: false,
-        message: "Tipo de transacción inválido. Debe ser 'DEBE' o 'HABER'",
-      });
-    }
-
-    const cuenta_id_num = parseInt(cuenta_id);
-    if(isNaN(cuenta_id_num) || cuenta_id_num<=0){
-      return res.status(400).json({
-        success: false,
-        message: "El id de la cuenta debe ser un entero positivo",
-      });
-    }
-
-    const monto_num= parseInt(monto);
-    if(isNaN(monto_num) || monto_num<=0){
-      return res.status(400).json({
-        success: false,
-        message: "El monto debe ser un entero positivo",
-      });
-    }
+    const data = await transaccionValidator(req.body);
 
     const nuevaTransaccion = await transaccionContableService.crearTransaccionContable({
-      cuenta_id,
-      monto,
-      tipo_transaccion,
-      partida_diaria_id,
-      fecha_operacion,
+      cuenta_id: data.cuenta_id_num,
+      monto: data.monto_num,
+      tipo_transaccion: data.tipo_transaccion,
+      partida_diaria_id:data.partida_num,
+      fecha_operacion: data.fechaISO,
     });
 
     res.status(201).json({
@@ -49,24 +24,7 @@ export const crearTransaccionContable = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al crear transacción contable:", error.message);
-
-    if (error.message.includes('CuentaContableNotFound')) {
-      return res.status(404).json({
-          success: false,
-          message: error.message
-      });
-    }
-    if (error.message.includes('PartidaDiariaNotFound')) {
-      return res.status(404).json({
-          success: false,
-          message: error.message
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: "Error interno del servidor",
-    });
+    return getThrow(error, res);
   }
 };
 
@@ -114,6 +72,15 @@ export const verTransaccionesContables = async (req, res) => {
 export const obtenerTransaccionesPorPartida = async (req, res) => {
   try {
     const { partida_diaria_id } = req.params;
+
+    const partida_num = parseInt(partida_diaria_id);
+    if(isNaN(partida_num) || partida_num<=0){
+      return res.status(400).json({
+        success : false,
+        message : "El ID de la partida diaria debe ser un número entero positivo válido"
+      });
+    }
+
     const transacciones = await transaccionContableService.obtenerTransaccionesPorPartida(partida_diaria_id);
     res.status(200).json({
       success: true,
@@ -132,6 +99,14 @@ export const eliminarTransaccionContable = async (req, res) => {
     try {
         const { id } = req.params;
 
+        const id_num = parseInt(id);
+        if(isNaN(id_num) || id_num <=0){
+          return res.status(400).json({
+            success: false,
+            message: "El ID de la transacción debe ser un número entero positivo válido."
+          });
+
+        }
         const transaccionEliminada = await transaccionContableService.eliminarTransaccionContable(id);
 
         if (!transaccionEliminada) {
@@ -166,12 +141,22 @@ export const actualizarTransaccionContable = async (req, res) => {
             });
         }
 
-        const transaccionActualizada = await transaccionContableService.actualizarTransaccionContable(id, {
-            cuenta_id,
-            monto,
-            tipo_transaccion,
-            partida_diaria_id,
-            fecha_operacion
+        const id_num = parseInt(id);
+        if(isNaN(id_num) || id_num<=0){
+          return res.status(400).json({
+            success : false,
+            message : "El ID tiene que ser un número entero poditivo válido"
+          });
+        }
+
+        const data = await transaccionValidator(req.body);
+
+        const transaccionActualizada = await transaccionContableService.actualizarTransaccionContable(id_num, {
+            cuenta_id : data.cuenta_id_num,
+            monto : data.monto_num,
+            tipo_transaccion : data.tipo_transaccion,
+            partida_diaria_id : data.partida_num,
+            fecha_operacion : data.fechaISO
         });
 
         if (!transaccionActualizada) {
@@ -188,9 +173,31 @@ export const actualizarTransaccionContable = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al actualizar transacción contable:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
+
+function getThrow(error, res){
+  //Se manejan todos los throw lanzados en services o helpers
+    const specificErrors = {
+        'FormatoFechaInvalido': 400,
+        'PartidaIdInvalido': 400,
+        'FechaFueraDePeriodo': 400,
+        'TipoTransaccionInvalido': 400,
+        'CuentaIdInvalido': 400,
+        'MontoInvalido': 400,
+        'PartidaDiariaNotFound': 404,
+        'CuentaContableNotFound': 404,
+        'FechaNoReal' : 404,
+        'DatosFaltantes' : 400
+    };
+    // Intenta encontrar el código mapeado; si falla, usa 500.
+    const errorKey = error.message.split(':')[0].trim();
+    const statusCode = specificErrors[errorKey] || 500;
+    const message = (statusCode === 500) ? "Error interno del servidor" : error.message;
+
+    return res.status(statusCode).json({
+      success: false,
+      message: message,
+    });
+}

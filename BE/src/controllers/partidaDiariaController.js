@@ -1,38 +1,16 @@
 import partidaDiariaService from "../services/partidaDiariaService.js";
+import { partidaDiariaValidator, partidaDiariaValidatorFecha } from "../helpers/partidaValidator.js";
+
 
 export const crearPartidaDiaria = async (req, res) => {
     try {
-        const { concepto, estado, id_periodo } = req.body;
-
-        if (!concepto || !id_periodo) {
-            return res.status(400).json({
-                success: false,
-                message: 'Faltan datos obligatorios'
-            });
-        }
-
-        // 
-        if (typeof concepto.trim() !== 'string' || concepto.trim().length === 0 || concepto.trim().length > 255) {
-            return res.status(400).json({
-                success: false,
-                message: 'El concepto debe ser una cadena no vacía de máximo 255 caracteres.'
-            });
-        }
-
-        //
-        const id_periodo_num = parseInt(id_periodo);
-        if(isNaN(id_periodo_num) || id_periodo_num <=0 ){
-            return res.status(400).json({
-                success: false,
-                message: "El id_periodo debe ser un número entero positivo válido."
-            });
-
-        }
+        
+        const data = partidaDiariaValidator(req.body)
 
         const nuevaPartida = await partidaDiariaService.crearPartidaDiaria({
-            concepto,
-            estado,
-            id_periodo
+            concepto : data.concepto_L,
+            estado : data.estado_L,
+            id_periodo : data.id_periodo_num
         });
 
         res.status(201).json({
@@ -41,16 +19,7 @@ export const crearPartidaDiaria = async (req, res) => {
             data: nuevaPartida
         });
     } catch (error) {
-        if (error.message === "PeriodoContableNotFound") {
-            return res.status(404).json({ // Se usa 404 porque el recurso referenciado no existe
-                success: false,
-                message: "El período contable especificado no existe."
-            });
-        }
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }  
 }
 
@@ -66,7 +35,7 @@ export const obtenerPartidaPorId = async (req, res) => {
             });
         }
 
-        const partida = await partidaDiariaService.obtenerPartidaPorId(id);
+        const partida = await partidaDiariaService.obtenerPartidaPorId(id_partida);
 
         if (!partida) {
             return res.status(404).json({
@@ -80,10 +49,7 @@ export const obtenerPartidaPorId = async (req, res) => {
             data: partida
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 }; 
 
@@ -95,10 +61,7 @@ export const verPartidasDiarias = async (req, res) => {
             data: partidas
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -114,39 +77,30 @@ export const obtenerPartidasPorPeriodo = async (req, res) => {
             });
         }
 
-        const partidas = await partidaDiariaService.obtenerPartidaPorPeriodo(id_periodo);
+        const partidas = await partidaDiariaService.obtenerPartidaPorPeriodo(id_periodo_num);
 
         res.status(200).json({
             success: true,
             data: partidas
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
 export const obtenerPartidasPorFechas = async (req, res) => {
     try {
         const { fecha_inicio, fecha_fin } = req.query;
-        if (!fecha_inicio || !fecha_fin) {
-            return res.status(400).json({
-                success: false,
-                message: 'Faltan parámetros de fecha obligatorios'
-            });
-        }
+        
+        const data = partidaDiariaValidatorFecha(req.query);
+
         const partidas = await partidaDiariaService.obtenerPartidasPorFechas(fecha_inicio, fecha_fin);
         res.status(200).json({
             success: true,
             data: partidas
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -162,7 +116,7 @@ export const eliminarPartidaDiaria = async (req, res) => {
             });
         }
 
-        const eliminado = await partidaDiariaService.eliminarPartidaDiaria(id);
+        const eliminado = await partidaDiariaService.eliminarPartidaDiaria(id_partida);
 
         if (!eliminado) {
             return res.status(404).json({
@@ -177,17 +131,7 @@ export const eliminarPartidaDiaria = async (req, res) => {
         });
     } catch (error) {
 
-        if (error.code === "23503" || error.code==="23001") {
-            return res.status(409).json({
-                success: false,
-                message: 'No se puede eliminar la partida diaria porque tiene transacciones contables asociadas.'
-            });
-        }
-
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -203,13 +147,14 @@ export const actualizarPartidaDiaria = async (req, res) => {
                 message: 'El ID porporcionado no es un número entero positivo válido'
             });
         }
+        const data = partidaDiariaValidator(req.body);
 
         const datosActualizar = {};
-        if (concepto !== undefined) datosActualizar.concepto = concepto;
-        if (estado !== undefined) datosActualizar.estado = estado;
-        if (id_periodo !== undefined) datosActualizar.id_periodo = id_periodo;
+        if (concepto !== undefined) datosActualizar.concepto = data.concepto_L;
+        if (estado !== undefined) datosActualizar.estado = data.estado_L;
+        if (id_periodo !== undefined) datosActualizar.id_periodo = data.id_periodo_num;
 
-        const actualizado = await partidaDiariaService.actualizarPartidaDiaria(id, datosActualizar);
+        const actualizado = await partidaDiariaService.actualizarPartidaDiaria(id_partida, datosActualizar);
 
         if (!actualizado) {
             return res.status(404).json({
@@ -224,15 +169,48 @@ export const actualizarPartidaDiaria = async (req, res) => {
             data: actualizado
         });
     } catch (error) {
-        if (error.message === "PeriodoContableNotFound") {
-            return res.status(404).json({ // Se usa 404 porque el recurso referenciado no existe
-                success: false,
-                message: "El período contable especificado no existe."
-            });
-        }
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
+
+/**
+ * Mapea un error lanzado (throw) a la respuesta HTTP correspondiente (statusCode).
+ * Centraliza el manejo de errores de validación, negocio y base de datos.
+ * @param {Error} error - El objeto Error capturado en el bloque catch.
+ * @param {object} res - El objeto de respuesta de Express.
+ * @returns {object} Una respuesta JSON con el código de estado apropiado.
+ */
+function getThrow(error, res){
+    const specificErrors = {
+        'DatosFaltantes': 400,
+        'ConceptoInvalido': 400,
+        'IdPeriodoInvalido': 400,
+        'FormatoFechaInvalido': 400,
+        'RangoDeFechasInvalido': 400,
+        'PeriodoContableNotFound': 404,
+        'PeriodoExistente': 409, 
+    };
+    const errorKey = error.code || error.message.split(':')[0].trim();
+    const statusCode = specificErrors[errorKey] || 500;
+    let message = error.message;
+
+    if (statusCode === 500) {
+        console.error("Error interno no mapeado:", error);
+        message = "Error interno del servidor";
+    } 
+    else if (errorKey in specificErrors && !error.code) { 
+        message = error.message.split(':').slice(1).join(':').trim() || error.message;
+    }
+    // Mensaje mejorado para errores de conflicto de la base de datos
+    else if (errorKey === '23505') {
+        message = 'El registro ya existe. Se violó una restricción de unicidad.';
+    }
+    else if (errorKey === '23503' || errorKey === '23001') {
+        message = 'No se puede eliminar la partida diaria porque tiene transacciones contables asociadas.';
+    }
+
+    return res.status(statusCode).json({
+      success: false,
+      message: message,
+    });
+}

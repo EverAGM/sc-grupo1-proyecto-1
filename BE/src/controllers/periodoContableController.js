@@ -1,50 +1,14 @@
 import periodoContableService from "../services/periodoContableService.js";
+import {periodoValidator} from "../helpers/periodoValidator.js"
 
 export const crearPeriodoContable = async (req, res) => {
     try {
-        const { fecha_inicio, fecha_fin, estado } = req.body;
-        const estado_L = String(estado || '').trim().toUpperCase();
-        const patronFecha = /^\d{2}\/\d{2}\/\d{4}$/;
-
-        if (!fecha_inicio || !fecha_fin || !estado_L) {
-            return res.status(400).json({
-                success: false,
-                message: 'Faltan datos obligatorios (fecha de inicio, fecha de fin, estado)'
-            });
-        }
-        //
-        if (!patronFecha.test(fecha_inicio) || !patronFecha.test(fecha_fin)) {
-            return res.status(400).json({
-                success: false,
-                message: 'El formato de fecha es inválido. Debe usar el formato DD/MM/AAAA.'
-            });
-        }
-        const parseFecha = (fechaStr) => {
-            const [dia, mes, anio] = fechaStr.split('/');
-            return new Date(anio, mes - 1, dia);//enero usa 0
-        };
-        const inicio = parseFecha(fecha_inicio);
-        const fin = parseFecha(fecha_fin);
-        if (isNaN(inicio) || isNaN(fin) || inicio.getFullYear() !== parseInt(fecha_inicio.substring(6))) {
-             return res.status(400).json({
-                success: false,
-                message: 'Una o ambas fechas no son fechas reales (ej. 31/02 o año inválido).'
-            });
-        }
-        if (inicio.getTime() > fin.getTime()) {
-            return res.status(400).json({
-                success: false,
-                message: 'La fecha de fin debe ser igual o posterior a la fecha de inicio.'
-            });
-        }//
-        const fechaInicioISO = inicio.toISOString().split('T')[0];
-        const fechaFinISO = fin.toISOString().split('T')[0];
-
+        const data = periodoValidator(req.body);
 
         const nuevoPeriodo = await periodoContableService.crearPeriodoContable({
-            fecha_inicio: fechaInicioISO, 
-            fecha_fin: fechaFinISO, 
-            estado: estado_L   //se guardan los datos filtrados y parseados en formato aceptable
+            fecha_inicio: data.fechaInicioISO, 
+            fecha_fin: data.fechaFinISO, 
+            estado: data.estado_L   
         });
 
 
@@ -56,18 +20,7 @@ export const crearPeriodoContable = async (req, res) => {
     } catch (error) {
 
         console.error("Error al crear periodo contable:", error); 
-        
-        if (error.code === '22008') { // Coigo de PostgreSQL por un dato fuera de rango
-            return res.status(400).json({
-                success: false,
-                message: 'Error de formato de fecha al intentar guardar en la base de datos.'
-            });
-        }
-
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -76,19 +29,13 @@ export const obtenerPeriodoPorId = async (req, res) => {
         const { id } = req.params;
         const id_N = parseInt(id);
         if(isNaN(id_N) || id_N <=0){
-            return res.status(400).json({
-                success: false,
-                message: 'El ID del periodo debe ser un número entero positivo válido.'
-            });
+            throw new Error('IdInvalido: El ID del periodo debe ser un número entero positivo válido.');
         }
 
-        const periodo = await periodoContableService.obtenerPeriodoPorId(id);
+        const periodo = await periodoContableService.obtenerPeriodoPorId(id_N);
 
         if (!periodo) {
-            return res.status(404).json({
-                success: false,
-                message: 'Periodo contable no encontrado'
-            });
+            throw new Error('PeriodoContableNotFound: Periodo contable no encontrado');
         }   
 
         res.status(200).json({
@@ -96,10 +43,7 @@ export const obtenerPeriodoPorId = async (req, res) => {
             data: periodo
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 }; 
 
@@ -111,10 +55,7 @@ export const verPeriodosContables = async (req, res) => {
             data: periodos
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -123,19 +64,13 @@ export const eliminarPeriodoContable = async (req, res) => {
         const { id } = req.params;
         const id_N = parseInt(id);
         if(isNaN(id_N) || id_N <=0){
-            return res.status(400).json({
-                success: false,
-                message: 'El ID del periodo debe ser un número entero positivo válido.'
-            });
+            throw new Error('IdInvalido: El ID del periodo debe ser un número entero positivo válido.');
         }
 
-        const periodoEliminado = await periodoContableService.eliminarPeriodoContable(id);
+        const periodoEliminado = await periodoContableService.eliminarPeriodoContable(id_N);
 
         if (!periodoEliminado) {
-            return res.status(404).json({
-                success: false,
-                message: 'Periodo contable no encontrado'
-            });
+            throw new Error('PeriodoContableNotFound: Periodo contable no encontrado');
         }
 
         res.status(200).json({
@@ -143,18 +78,7 @@ export const eliminarPeriodoContable = async (req, res) => {
             message: 'Periodo contable eliminado exitosamente',
         });
     } catch (error) {
-
-        if (error.code === '23503' || error.code === '23001') { // Violación de clave foránea
-            return res.status(409).json({
-                success: false,
-                message: 'No se puede eliminar el periodo contable porque está asociado a otros registros.'
-            });
-        }
-        
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        return getThrow(error, res);
     }
 };
 
@@ -163,25 +87,19 @@ export const actualizarPeriodoContable = async (req, res) => {
         const { id } = req.params;
         const id_N = parseInt(id);
         if(isNaN(id_N) || id_N <=0){
-            return res.status(400).json({
-                success: false,
-                message: 'El ID del periodo debe ser un número entero positivo válido.'
-            });
+            throw new Error('IdInvalido: El ID del periodo debe ser un número entero positivo válido.');
         }
 
-        const { fecha_inicio, fecha_fin, estado } = req.body;
+        const data = periodoValidator(req.body);
 
-        const periodoActualizado = await periodoContableService.actualizarPeriodoContable(id, {
-            fecha_inicio,
-            fecha_fin,
-            estado
+        const periodoActualizado = await periodoContableService.actualizarPeriodoContable(id_N, {
+            fecha_inicio : data.fechaInicioISO,
+            fecha_fin : data.fechaFinISO,
+            estado : data.estado_L
         });
 
         if (!periodoActualizado) {
-            return res.status(404).json({
-                success: false,
-                message: 'Periodo contable no encontrado'
-            });
+            throw new Error('PeriodoContableNotFound: Periodo contable no encontrado');
         }
 
         res.status(200).json({
@@ -190,9 +108,47 @@ export const actualizarPeriodoContable = async (req, res) => {
             data: periodoActualizado
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor'
-        });
+        console.error("Error al intentar actualizar periodo contable",error);
+        return getThrow(error, res)
     }
 };
+
+
+function getThrow(error, res){
+    const specificErrors = {
+        'DatosFaltantes': 400,
+        'FormatoFechaInvalido': 400,
+        'FechaNoReal': 400,
+        'RangoDeFechasInvalido': 400,
+        //'PeriodoContableNotFound': 400,
+        'IdInvalido':400,
+        'PeriodoExistente': 409,
+        'PeriodoContableNotFound': 404,
+        'EstadoInvalido': 400, 
+        '22008': 400,
+        '23505': 409,
+        '23503': 409,
+        '23001': 409,
+    };
+    const errorKey = error.code || error.message.split(':')[0].trim();
+    const statusCode = specificErrors[errorKey] || 500;
+    let message = error.message;
+
+    if (statusCode === 500) {
+        message = "Error interno del servidor";
+    }
+    else if (errorKey === '23503' || errorKey === '23001') {
+        message = 'No se puede completar la operación porque el registro está asociado a otros datos (restricción de clave foránea).';
+    }
+    else if (errorKey === '23505') {
+        message = 'Ya existe un registro con esos datos.';
+    }
+    else if (errorKey in specificErrors && !error.code) { 
+        message = error.message.split(':').slice(1).join(':').trim() || error.message;
+    }
+    
+    return res.status(statusCode).json({
+      success: false,
+      message: message,
+    });
+}
