@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Input, Select, DatePicker, InputNumber, Popconfirm, Tooltip } from 'antd';
-import { FaFileInvoiceDollar, FaPlus, FaEye, FaEdit, FaTrash, FaSpinner, FaInbox, FaFilter, FaSave, FaTimes } from 'react-icons/fa';
+import { FaFileInvoiceDollar, FaPlus, FaEye, FaEdit, FaTrash, FaSpinner, FaInbox, FaFilter, FaSave, FaTimes, FaHome } from 'react-icons/fa';
 import { BiRefresh } from 'react-icons/bi';
+import { Link } from "react-router-dom";
 import { MdFileDownload } from 'react-icons/md';
 import moment from 'moment';
 import * as facturacionService from '../services/facturacionService';
@@ -167,10 +168,13 @@ const FacturacionPage = () => {
 
   return (
     <div className="facturacion-page">
-      <h1>
-        <FaFileInvoiceDollar className="icon" />
-        Facturación Electrónica
-      </h1>
+      <header className="page-header">
+        <h1>Facturacion Electronica</h1>
+        <Link to="/" className="back-link-header">
+          <FaHome />
+          <span>Volver al inicio</span>
+        </Link>
+      </header>
 
       <div className="facturacion-header">
         <div className="header-info">

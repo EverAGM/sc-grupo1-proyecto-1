@@ -17,19 +17,19 @@ export default function ContaCorpDashboard() {
 
         <nav className="cc-nav">
             <button
-            className="cc-nav-btn"
+            className="cc-nav-btn cc-nav-btn-highlight"
             onClick={() => navigate("/cuentas-contables")}
             >
             Cuentas contables
             </button>
             <button
-            className="cc-nav-btn"
+            className="cc-nav-btn cc-nav-btn-highlight"
             onClick={() => navigate("/transacciones")}
             >
             Transacciones
             </button>
             <button
-            className="cc-nav-btn"
+            className="cc-nav-btn cc-nav-btn-highlight"
             onClick={() => navigate("/periodos")}
             >
             Periodos

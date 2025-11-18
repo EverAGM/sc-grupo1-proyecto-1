@@ -1,6 +1,6 @@
 .cuentas-contables {
   font-family: Arial, sans-serif;
-  min-height: 100vh;
+  height: 100vh;
   padding: 24px;
   background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 40%, #f9fafb 100%);
   display: flex;

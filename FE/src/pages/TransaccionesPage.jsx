@@ -392,13 +392,12 @@ export default function TransaccionesPage() {
   return (
     <div className="transacciones-page">
       <header className="page-header">
-        <h1>Periodos Contables</h1>
+        <h1>Transacciones Contables</h1>
         <Link to="/" className="back-link-header">
           <FaHome />
           <span>Volver al inicio</span>
         </Link>
       </header>
-      <h1>Transacciones Contables</h1>
 
       <div className="header-acciones">
         <button
