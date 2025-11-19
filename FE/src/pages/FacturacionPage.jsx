@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Input, Select, DatePicker, InputNumber, Popconfirm, Tooltip } from 'antd';
-import { FaFileInvoiceDollar, FaPlus, FaEye, FaEdit, FaTrash, FaSpinner, FaInbox, FaFilter, FaSave, FaTimes, FaHome } from 'react-icons/fa';
+import { Modal, Button, Form, Input, Select, DatePicker, InputNumber, Popconfirm, Tooltip, message } from 'antd';
+import { FaFileInvoiceDollar, FaPlus, FaEye, FaEdit, FaTrash, FaSpinner, FaInbox, FaFilter, FaSave, FaTimes, FaHome, FaCalendarAlt } from 'react-icons/fa';
 import { BiRefresh } from 'react-icons/bi';
 import { Link } from "react-router-dom";
-import { MdFileDownload } from 'react-icons/md';
 import moment from 'moment';
 import * as facturacionService from '../services/facturacionService';
+import { obtenerPeriodos } from '../services/periodosService';
 import './FacturacionPage.css';
 
 const { Option } = Select;
 
 const FacturacionPage = () => {
-  // Estados principales
   const [facturas, setFacturas] = useState([]);
+  const [periodos, setPeriodos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingPeriodos, setLoadingPeriodos] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingFactura, setEditingFactura] = useState(null);
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [viewingFactura, setViewingFactura] = useState(null);
   const [form] = Form.useForm();
-
-  // Estados de filtros
   const [filtroEstado, setFiltroEstado] = useState('');
 
   useEffect(() => {
     cargarFacturas();
+    cargarPeriodos();
   }, []);
 
   const cargarFacturas = async () => {
@@ -34,9 +34,24 @@ const FacturacionPage = () => {
       setFacturas(data);
     } catch (error) {
       console.error('Error al cargar facturas:', error);
-      setFacturas([]); // Establecer array vacío en caso de error
+      message.error('Error al cargar las facturas');
+      setFacturas([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cargarPeriodos = async () => {
+    setLoadingPeriodos(true);
+    try {
+      const data = await obtenerPeriodos();
+      setPeriodos(data || []);
+    } catch (error) {
+      console.error('Error al cargar períodos:', error);
+      message.error('Error al cargar los períodos contables');
+      setPeriodos([]);
+    } finally {
+      setLoadingPeriodos(false);
     }
   };
 
@@ -63,13 +78,14 @@ const FacturacionPage = () => {
   const handleEliminarFactura = async (id) => {
     try {
       await facturacionService.eliminarFactura(id);
+      message.success('Factura eliminada exitosamente');
       cargarFacturas();
     } catch (error) {
       console.error('Error al eliminar factura:', error);
+      message.error(error.message || 'Error al eliminar la factura');
     }
   };
 
-  // Función para generar CUFE automáticamente
   const generarCUFE = (numeroFactura, fechaEmision, clienteNombre, total) => {
     const fecha = new Date(fechaEmision);
     const timestamp = fecha.getTime();
@@ -78,7 +94,6 @@ const FacturacionPage = () => {
     return `CUFE${timestamp}${hash}${random}`.substring(0, 40);
   };
 
-  // Función auxiliar para hash simple
   const simpleHash = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -97,10 +112,9 @@ const FacturacionPage = () => {
         subtotal: parseFloat(values.subtotal) || 0,
         impuestos: parseFloat(values.impuestos) || 0,
         total: parseFloat(values.total) || 0,
-        id_periodo: parseInt(values.id_periodo) || 1
+        id_periodo: parseInt(values.id_periodo)
       };
 
-      // Generar CUFE automáticamente si el estado requiere CUFE y no tiene uno
       const estadosConCUFE = ['ENVIADA', 'ACEPTADA', 'RECHAZADA', 'ANULADA'];
       if (estadosConCUFE.includes(values.estado_fe) && (!values.cufe || values.cufe.trim() === '')) {
         formData.cufe = generarCUFE(
@@ -113,8 +127,10 @@ const FacturacionPage = () => {
 
       if (editingFactura) {
         await facturacionService.actualizarFactura(editingFactura.id_factura_electronica, formData);
+        message.success('Factura actualizada exitosamente');
       } else {
         await facturacionService.crearFactura(formData);
+        message.success('Factura creada exitosamente');
       }
 
       setModalVisible(false);
@@ -122,6 +138,18 @@ const FacturacionPage = () => {
       cargarFacturas();
     } catch (error) {
       console.error('Error al guardar factura:', error);
+      
+      if (error.message.includes('FechaEmisionFueraDePeriodo')) {
+        message.error(error.message);
+      } else if (error.message.includes('PeriodoContableNotFound')) {
+        message.error('El período contable seleccionado no existe');
+      } else if (error.message.includes('total no coincide')) {
+        message.error('El total no coincide con la suma de subtotal e impuestos');
+      } else if (error.message.includes('Faltan datos requeridos')) {
+        message.error('Faltan datos requeridos para crear la factura');
+      } else {
+        message.error(error.message || 'Error al guardar la factura');
+      }
     }
   };
 
@@ -156,20 +184,24 @@ const FacturacionPage = () => {
     );
   };
 
+  const formatearPeriodo = (periodo) => {
+    if (!periodo) return '';
+    const inicio = moment(periodo.fecha_inicio).format('DD/MM/YYYY');
+    const fin = moment(periodo.fecha_fin).format('DD/MM/YYYY');
+    return `${inicio} - ${fin}`;
+  };
+
   const facturasFiltradas = facturas.filter(factura => {
-    let pasaFiltro = true;
-    
     if (filtroEstado && factura.estado_fe !== filtroEstado) {
-      pasaFiltro = false;
+      return false;
     }
-    
-    return pasaFiltro;
+    return true;
   });
 
   return (
     <div className="facturacion-page">
       <header className="page-header">
-        <h1>Facturacion Electronica</h1>
+        <h1>Facturación Electrónica</h1>
         <Link to="/" className="back-link-header">
           <FaHome />
           <span>Volver al inicio</span>
@@ -249,6 +281,7 @@ const FacturacionPage = () => {
               <tr>
                 <th>No. Factura</th>
                 <th>Cliente</th>
+                <th>Período Contable</th>
                 <th>Fecha Emisión</th>
                 <th>Subtotal</th>
                 <th>Impuestos</th>
@@ -263,6 +296,12 @@ const FacturacionPage = () => {
                 <tr key={factura.id_factura_electronica}>
                   <td>{factura.numero_factura}</td>
                   <td>{factura.cliente_nombre}</td>
+                  <td>
+                    {factura.periodo_fecha_inicio && factura.periodo_fecha_fin 
+                      ? `${moment(factura.periodo_fecha_inicio).format('DD/MM/YYYY')} - ${moment(factura.periodo_fecha_fin).format('DD/MM/YYYY')}`
+                      : 'Sin período'
+                    }
+                  </td>
                   <td>{moment(factura.fecha_emision).format('DD/MM/YYYY')}</td>
                   <td className="currency">
                     {facturacionService.formatearMoneda(factura.subtotal)}
@@ -336,11 +375,21 @@ const FacturacionPage = () => {
         >
           <div className="form-row">
             <Form.Item
-              name="numero_factura"
-              label="Número de Factura"
-              rules={[{ required: true, message: 'Ingrese el número de factura' }]}
+              name="id_periodo"
+              label="Período Contable"
+              rules={[{ required: true, message: 'Seleccione el período contable' }]}
             >
-              <Input placeholder="Ej: F001-00001" />
+              <Select 
+                placeholder="Seleccionar período"
+                loading={loadingPeriodos}
+                suffixIcon={<FaCalendarAlt />}
+              >
+                {periodos.map(periodo => (
+                  <Option key={periodo.id_periodo} value={periodo.id_periodo}>
+                    {formatearPeriodo(periodo)} - {periodo.estado}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <Form.Item
@@ -351,17 +400,28 @@ const FacturacionPage = () => {
               <DatePicker 
                 style={{ width: '100%' }}
                 format="DD/MM/YYYY"
+                placeholder="Seleccione fecha"
               />
             </Form.Item>
           </div>
 
-          <Form.Item
-            name="cliente_nombre"
-            label="Nombre del Cliente"
-            rules={[{ required: true, message: 'Ingrese el nombre del cliente' }]}
-          >
-            <Input placeholder="Nombre completo del cliente" />
-          </Form.Item>
+          <div className="form-row">
+            <Form.Item
+              name="numero_factura"
+              label="Número de Factura"
+              rules={[{ required: true, message: 'Ingrese el número de factura' }]}
+            >
+              <Input placeholder="Ej: F001-00001" />
+            </Form.Item>
+
+            <Form.Item
+              name="cliente_nombre"
+              label="Nombre del Cliente"
+              rules={[{ required: true, message: 'Ingrese el nombre del cliente' }]}
+            >
+              <Input placeholder="Nombre completo del cliente" />
+            </Form.Item>
+          </div>
 
           <Form.Item
             name="descripcion"
@@ -422,27 +482,13 @@ const FacturacionPage = () => {
             </Form.Item>
           </div>
 
-          <div className="form-row-3">
-            <Form.Item
-              name="id_periodo"
-              label="Período Contable"
-              rules={[{ required: true, message: 'Seleccione el período contable' }]}
-              initialValue={1}
-            >
-              <Select placeholder="Seleccionar período">
-                <Option value={1}>Período 2025</Option>
-                <Option value={2}>Período 2024</Option>
-                <Option value={3}>Período 2023</Option>
-              </Select>
-            </Form.Item>
-
+          <div className="form-row">
             <Form.Item
               name="estado_fe"
               label="Estado"
               initialValue="BORRADOR"
             >
               <Select onChange={(valor) => {
-                // Auto-generar CUFE si cambia a un estado que requiere CUFE
                 const estadosConCUFE = ['ENVIADA', 'ACEPTADA', 'RECHAZADA', 'ANULADA'];
                 if (estadosConCUFE.includes(valor) && (!form.getFieldValue('cufe') || form.getFieldValue('cufe').trim() === '')) {
                   const numeroFactura = form.getFieldValue('numero_factura');
@@ -503,7 +549,6 @@ const FacturacionPage = () => {
         </Form>
       </Modal>
 
-      {/* Modal de Detalles de Factura */}
       <Modal
         title="Detalles de la Factura Electrónica"
         open={viewModalVisible}
@@ -538,19 +583,19 @@ const FacturacionPage = () => {
               </div>
 
               <div>
-                <strong style={{ color: '#374151' }}>Fecha de Emisión:</strong>
+                <strong style={{ color: '#374151' }}>Período Contable:</strong>
                 <div style={{ marginTop: '4px' }}>
-                  {moment(viewingFactura.fecha_emision).format('DD/MM/YYYY')}
+                  {viewingFactura.periodo_fecha_inicio && viewingFactura.periodo_fecha_fin 
+                    ? `${moment(viewingFactura.periodo_fecha_inicio).format('DD/MM/YYYY')} - ${moment(viewingFactura.periodo_fecha_fin).format('DD/MM/YYYY')}`
+                    : 'Sin período'
+                  }
                 </div>
               </div>
 
               <div>
-                <strong style={{ color: '#374151' }}>Fecha de Creación:</strong>
+                <strong style={{ color: '#374151' }}>Fecha de Emisión:</strong>
                 <div style={{ marginTop: '4px' }}>
-                  {viewingFactura.fecha_creacion 
-                    ? moment(viewingFactura.fecha_creacion).format('DD/MM/YYYY HH:mm')
-                    : '-'
-                  }
+                  {moment(viewingFactura.fecha_emision).format('DD/MM/YYYY')}
                 </div>
               </div>
 
@@ -616,13 +661,6 @@ const FacturacionPage = () => {
                   </div>
                 </div>
               )}
-
-              <div>
-                <strong style={{ color: '#374151' }}>Período Contable:</strong>
-                <div style={{ marginTop: '4px' }}>
-                  ID: {viewingFactura.id_periodo}
-                </div>
-              </div>
             </div>
           </div>
         )}
