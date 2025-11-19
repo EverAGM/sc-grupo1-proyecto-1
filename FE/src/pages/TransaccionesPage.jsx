@@ -53,6 +53,18 @@ const getDynamicEstado = (fechaInicioISO, fechaFinISO) => {
   return "INDETERMINADO";
 };
 
+  const getEstadoPeriodo = (p) => {
+  if (!p) return "INDETERMINADO";
+
+  if (p.estado) {
+    const est = String(p.estado).toUpperCase();
+    if (est === "PROXIMO") return "PRÓXIMO";
+    return est;
+  }
+
+  return getDynamicEstado(p.fecha_inicio, p.fecha_fin);
+  };
+
 const parseFechaISO = (isoString) => {
   if (!isoString) return { anio: null, mes: null, trimestre: null };
   const fecha = new Date(isoString);
@@ -111,11 +123,11 @@ export default function TransaccionesPage() {
       setActivePeriodo(null);
       return;
     }
-    const ap = periodos.find((p) =>
-      getDynamicEstado(p.fecha_inicio, p.fecha_fin) === "ACTIVO"
-    );
+
+    const ap = periodos.find((p) => getEstadoPeriodo(p) === "ACTIVO");
     setActivePeriodo(ap || null);
   }, [periodos]);
+
   useEffect(() => {
     if (activePeriodo) {
       setPartida((prev) => ({ ...prev, id_periodo: activePeriodo.id_periodo }));
@@ -421,6 +433,18 @@ export default function TransaccionesPage() {
     }
   };
 
+  const periodoSeleccionado = useMemo(() => {
+  if (!partida.id_periodo) {
+    return activePeriodo || null;
+  }
+
+  const encontrado = periodos.find(
+    (p) => String(p.id_periodo) === String(partida.id_periodo)
+  );
+
+  return encontrado || activePeriodo || null;
+  }, [partida.id_periodo, periodos, activePeriodo]);
+
   return (
     <div className="transacciones-page">
       <header className="page-header">
@@ -585,30 +609,31 @@ export default function TransaccionesPage() {
                   </div>
                   <div className="form-group">
                     <label>Periodo</label>
-                    {activePeriodo ? (
-                      <input
-                        type="text"
-                        value={formatPeriodoLabel(activePeriodo)}
-                        disabled
-                      />
-                    ) : (
-                      <select
-                        value={partida.id_periodo}
-                        onChange={(e) =>
-                          setPartida({ ...partida, id_periodo: e.target.value })
-                        }
-                        disabled={isSaving}
-                        required
-                      >
-                        <option value="">Seleccione periodo</option>
-                        {periodos.map((p) => (
-                          <option key={p.id_periodo} value={p.id_periodo}>
-                            {p.id_periodo} - {formatDate(p.fecha_inicio)} al{" "}
-                            {formatDate(p.fecha_fin)}
+                    <select
+                      value={partida.id_periodo}
+                      onChange={(e) =>
+                        setPartida({ ...partida, id_periodo: e.target.value })
+                      }
+                      disabled={isSaving}
+                      required
+                    >
+                      <option value="">Seleccione periodo</option>
+                      {periodos.map((p) => {
+                        const estado = getEstadoPeriodo(p);    
+                        const label = `${formatPeriodoLabel(p)} (${estado})`;
+                        const isActivo = estado === "ACTIVO";
+
+                        return (
+                          <option
+                            key={p.id_periodo}
+                            value={p.id_periodo}
+                            disabled={!isActivo}
+                          >
+                            {label}
                           </option>
-                        ))}
-                      </select>
-                    )}
+                        );
+                      })}
+                    </select>
                   </div>
                 </div>
 
@@ -711,45 +736,49 @@ export default function TransaccionesPage() {
                   </div>
 
                   <div className="form-group" style={{ flex: 1 }}>
-                    <label>Fecha Operación</label>
-                    <DatePicker
-                      value={
-                        formTrans.fecha_operacion_iso
-                          ? dayjs(formTrans.fecha_operacion_iso)
-                          : null
+                  <label>Fecha Operación</label>
+                  <DatePicker
+                    value={
+                      formTrans.fecha_operacion_iso
+                        ? dayjs(formTrans.fecha_operacion_iso)
+                        : null
+                    }
+                    format="DD/MM/YYYY"
+                    placeholder="DD/MM/YYYY"
+                    onChange={(date) => {
+                      if (date) {
+                        const iso = date.format("YYYY-MM-DD");
+                        const display = date.format("DD/MM/YYYY");
+                        setFormTrans({
+                          ...formTrans,
+                          fecha_operacion: display,
+                          fecha_operacion_iso: iso,
+                        });
+                      } else {
+                        const todayIso = new Date().toISOString().split("T")[0];
+                        setFormTrans({
+                          ...formTrans,
+                          fecha_operacion: formatDate(todayIso),
+                          fecha_operacion_iso: todayIso,
+                        });
                       }
-                      format="DD/MM/YYYY"
-                      placeholder="DD/MM/YYYY"
-                      onChange={(date) => {
-                        if (date) {
-                          const iso = date.format("YYYY-MM-DD");
-                          const display = date.format("DD/MM/YYYY");
-                          setFormTrans({
-                            ...formTrans,
-                            fecha_operacion: display,
-                            fecha_operacion_iso: iso,
-                          });
-                        } else {
-                          const todayIso = new Date().toISOString().split("T")[0];
-                          setFormTrans({
-                            ...formTrans,
-                            fecha_operacion: formatDate(todayIso),
-                            fecha_operacion_iso: todayIso,
-                          });
-                        }
-                      }}
-                      disabledDate={(current) => {
-                        if (!activePeriodo || !activePeriodo.fecha_inicio || !activePeriodo.fecha_fin) {
-                          return false;
-                        }
-                        const start = dayjs(activePeriodo.fecha_inicio).startOf("day");
-                        const end = dayjs(activePeriodo.fecha_fin).endOf("day");
-                        return current && (current.isBefore(start) || current.isAfter(end));
-                      }}
-                      disabled={isSaving}
-                      style={{ width: "100%" }}
-                      inputReadOnly={false}
-                    />
+                    }}
+                    disabledDate={(current) => {
+                      if (
+                        !periodoSeleccionado ||
+                        !periodoSeleccionado.fecha_inicio ||
+                        !periodoSeleccionado.fecha_fin || !current
+                      ) {
+                        return false;
+                      }
+                      const start = dayjs(periodoSeleccionado.fecha_inicio).startOf("day");
+                      const end = dayjs(periodoSeleccionado.fecha_fin).endOf("day");
+                      return current && (current.isBefore(start) || current.isAfter(end));
+                    }}
+                    disabled={isSaving}
+                    style={{ width: "100%" }}
+                    inputReadOnly={false}
+                  />
                   </div>
                 </div>
               </div>
