@@ -23,7 +23,7 @@ class DatabaseConnection {
     };
 
     // Configuración SSL para producción
-    if (NODE_ENV === 'production') {
+    if (NODE_ENV === 'production' && process.env.DB_SSL !== 'false') {
       config.ssl = {
         rejectUnauthorized: false,
       };
