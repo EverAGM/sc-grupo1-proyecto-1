@@ -16,10 +16,6 @@ services:
       DB_SSL: "false"
       NODE_ENV: production
     network_mode: host
-  
-    
-
-
   frontend:
     build:
       context: ./FE
