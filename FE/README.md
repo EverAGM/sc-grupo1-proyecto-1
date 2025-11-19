@@ -1,16 +1,153 @@
-# React + Vite
+# ContaCorp - Frontend 💻
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema contable integral con módulo de facturación electrónica desarrollado en React + Vite.
 
-Currently, two official plugins are available:
+## 🚀 Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 📊 Módulos Principales
+- **📋 Cuentas Contables** - Gestión del plan de cuentas
+- **💸 Transacciones** - Registro de movimientos contables
+- **📅 Períodos Contables** - Administración de períodos fiscales
+- **⚖️ Balance** - Visualización de estados financieros
+- **📈 Reportes** - Generación de reportes contables
+- **🧾 Facturación Electrónica** - Sistema completo de facturación
 
-## React Compiler
+### 🎨 Tecnologías Utilizadas
+- **React 18** - Framework de frontend
+- **Vite** - Herramienta de desarrollo y build
+- **React Router** - Navegación entre páginas
+- **Ant Design** - Biblioteca de componentes UI
+- **React Icons** - Iconografía moderna
+- **React Toastify** - Notificaciones toast
+- **Moment.js** - Manejo de fechas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📦 Instalación
 
-## Expanding the ESLint configuration
+```bash
+# Clonar el repositorio
+git clone https://github.com/EverAGM/sc-grupo1-proyecto-1.git
+cd sc-grupo1-proyecto-1/FE
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Instalar dependencias
+npm install
+
+# Ejecutar en modo desarrollo
+npm run dev
+```
+
+## 🛠️ Scripts Disponibles
+
+```bash
+npm run dev          # Servidor de desarrollo (http://localhost:5173)
+npm run build        # Build para producción
+npm run preview      # Preview del build de producción
+npm run lint         # Verificar código con ESLint
+```
+
+## 📂 Estructura del Proyecto
+
+```
+FE/
+├── public/              # Archivos estáticos
+├── src/
+│   ├── assets/          # Recursos (imágenes, iconos)
+│   ├── pages/           # Componentes de páginas
+│   │   ├── IndexPage.jsx           # Dashboard principal
+│   │   ├── TransaccionesPage.jsx   # Gestión de transacciones
+│   │   ├── BalancePage.jsx         # Estados financieros
+│   │   ├── ReportesPage.jsx        # Reportes contables
+│   │   ├── PeriodosPage.jsx        # Períodos contables
+│   │   ├── CuentasContablesPage.jsx # Plan de cuentas
+│   │   └── FacturacionPage.jsx     # Facturación electrónica
+│   ├── services/        # Servicios de API
+│   │   ├── transaccionesService.js
+│   │   ├── reportesService.js
+│   │   └── facturacionService.js
+│   ├── router.jsx       # Configuración de rutas
+│   ├── App.jsx          # Componente principal
+│   └── main.jsx         # Punto de entrada
+├── package.json
+└── vite.config.js       # Configuración de Vite
+```
+
+## 🧾 Módulo de Facturación Electrónica
+
+### Funcionalidades Principales
+- ✅ **CRUD Completo** - Crear, leer, actualizar y eliminar facturas
+- ✅ **Estados de Factura** - BORRADOR, ENVIADA, ACEPTADA, RECHAZADA, ANULADA
+- ✅ **Generación de CUFE** - Código Único de Facturación Electrónica automático
+- ✅ **Validación de Totales** - Cálculo automático de subtotal + impuestos
+- ✅ **Filtros y Búsqueda** - Filtrar facturas por estado
+- ✅ **Modal de Detalles** - Vista completa de información de factura
+- ✅ **Integración Completa** - Conectado con períodos contables
+
+### Campos de Factura
+- Número de factura (único)
+- Fecha de emisión
+- Cliente (nombre completo)
+- Descripción de productos/servicios
+- Subtotal, impuestos y total
+- Estado de facturación electrónica
+- CUFE (generado automáticamente)
+- Período contable asociado
+
+## 🎯 Rutas de la Aplicación
+
+```
+/                    # Dashboard principal
+/cuentas-contables   # Gestión del plan de cuentas
+/transacciones       # Registro de movimientos
+/periodos           # Administración de períodos
+/balance            # Estados financieros
+/reportes           # Reportes contables
+/facturacion        # Facturación electrónica
+```
+
+## 🔧 Configuración de Desarrollo
+
+### Variables de Entorno
+El frontend se conecta al backend en `http://localhost:3000` por defecto.
+
+## cambiar muy especifico
+### API Endpoints
+- `GET /api/facturacion-electronica` - Listar facturas
+- `POST /api/facturacion-electronica` - Crear factura
+- `PUT /api/facturacion-electronica/:id` - Actualizar factura
+- `DELETE /api/facturacion-electronica/:id` - Eliminar factura
+
+## 🎨 Estilos y Temas
+
+- **Ant Design** para componentes base
+- **CSS personalizado** para estilos específicos
+- **Diseño responsive** compatible con móviles
+- **Esquema de colores** moderno y profesional
+
+## 🚀 Deploy
+
+```bash
+# Build para producción
+npm run build
+
+# Los archivos se generan en la carpeta dist/
+```
+
+## 🤝 Contribución
+
+1. Fork el proyecto
+2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -m 'feat: agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abrir Pull Request
+
+## 👥 Equipo de Desarrollo
+
+- **Grupo 1** - Sistemas Contables
+- **Proyecto** - ContaCorp
+
+## 📄 Licencia
+
+Este proyecto es parte del curso de Sistemas Contables - Universidad.
+
+---
+
+**🎯 ContaCorp** - Sistema contable moderno con facturación electrónica integrada.
