@@ -79,6 +79,13 @@ export const crearFacturaElectronica = async (req, res) => {
       });
     }
 
+    if (error.message.includes('FechaEmisionFueraDePeriodo')) {
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+
     if (error.message.includes('total no coincide')) {
       return res.status(400).json({
         success: false,
@@ -217,6 +224,13 @@ export const actualizarFacturaElectronica = async (req, res) => {
   } catch (error) {
     console.error('Error al actualizar factura electrónica:', error);
     
+    if (error.message.includes('FechaEmisionFueraDePeriodo')) {
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    }
+
     if (error.message.includes('total no coincide')) {
       return res.status(400).json({
         success: false,

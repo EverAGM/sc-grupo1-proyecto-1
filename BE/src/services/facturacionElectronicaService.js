@@ -11,6 +11,15 @@ class FacturacionElectronicaService {
       throw new Error("PeriodoContableNotFound");
     }
 
+   
+    const fechaEmision = new Date(fecha_emision);
+    const fechaInicioPeriodo = new Date(periodo.fecha_inicio);
+    const fechaFinPeriodo = new Date(periodo.fecha_fin);
+
+    if (fechaEmision < fechaInicioPeriodo || fechaEmision > fechaFinPeriodo) {
+      throw new Error(`FechaEmisionFueraDePeriodo: La fecha de emisión (${fecha_emision}) debe estar entre ${periodo.fecha_inicio} y ${periodo.fecha_fin}`);
+    }
+
     if (!numero_factura || !fecha_emision || !cliente_nombre || !subtotal || !impuestos || !total || !id_periodo) {
       throw new Error("Faltan datos requeridos");
     }
@@ -72,6 +81,21 @@ class FacturacionElectronicaService {
   async actualizarFacturaElectronica(id, datos) {
     const { numero_factura, fecha_emision, cliente_nombre, subtotal, impuestos, total, estado_fe, cufe, id_periodo, descripcion } = datos;
 
+   
+    if (id_periodo && fecha_emision) {
+      const periodo = await periodoContableService.obtenerPeriodoPorId(id_periodo);
+      if (!periodo) {
+        throw new Error("PeriodoContableNotFound");
+      }
+
+      const fechaEmision = new Date(fecha_emision);
+      const fechaInicioPeriodo = new Date(periodo.fecha_inicio);
+      const fechaFinPeriodo = new Date(periodo.fecha_fin);
+
+      if (fechaEmision < fechaInicioPeriodo || fechaEmision > fechaFinPeriodo) {
+        throw new Error(`FechaEmisionFueraDePeriodo: La fecha de emisión (${fecha_emision}) debe estar entre ${periodo.fecha_inicio} y ${periodo.fecha_fin}`);
+      }
+    }
    
     if (subtotal && impuestos && total) {
       const totalCalculado = parseFloat(subtotal) + parseFloat(impuestos);
