@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+ 
+  backend:
+    build:
+      context: ./BE
+      dockerfile: Dockerfile
+    container_name: sic_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DB_SSL: "false"
+      NODE_ENV: production
+    network_mode: host
+  frontend:
+    build:
+      context: ./FE
+      dockerfile: Dockerfile
+    container_name: sic_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"  
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+      VITE_BACKEND_URL: http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - sic_network
+
+
+networks:
+  sic_network:
+    driver: bridge
+    name: sic_network
+
+
+volumes:
+  app_data:
+    driver: local

@@ -1,0 +1,375 @@
+.cuentas-contables {
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  padding: 24px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 40%, #f9fafb 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.page-header {
+  width: 100%;
+  max-width: 1200px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 36px;
+  margin: 0;
+  font-weight: 800;
+  color: #111827;
+}
+
+.page-subtitle {
+  margin-top: 8px;
+  color: #4b5563;
+  font-size: 15px;
+}
+
+.dashboard-grid {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.panel {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  box-sizing: border-box;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.panel-description {
+  margin: 4px 0 14px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge-loading {
+  background-color: #e5f3ff;
+  color: #1d4ed8;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.form-cuenta {
+  width: 100%;
+  text-align: left;
+  background-color: #f9fafb;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-sizing: border-box;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.readonly-input {
+  background-color: #f3f4f6 !important;
+  cursor: not-allowed;
+}
+
+.form-actions {
+  margin-top: 10px;
+}
+
+.table-wrapper {
+  width: 100%;
+  margin-top: 10px;
+  max-height: 480px;
+  overflow: auto;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 999px;
+}
+
+.cuentas-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cuentas-table th,
+.cuentas-table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.cuentas-table th {
+  background-color: #f3f4f6;
+  font-weight: 700;
+  color: #374151;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.cuentas-table tr:nth-child(even) td {
+  background-color: #f9fafb;
+}
+
+.cuentas-table tr:hover td {
+  background-color: #e5f3ff;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    width: 100%;
+  }
+}
+
+.page-header {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.back-link-header {
+  background: #e5e7eb;
+  color: #111827;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back-link-header:hover {
+  background: #d1d5db;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+/* === ESTILOS AÑADIDOS === */
+
+/* Estilos para el icono en el link de volver */
+.back-link-header svg {
+  font-size: 16px;
+  transition: transform 0.2s ease-in-out;
+}
+.back-link-header:hover svg {
+  transform: translateX(-2px);
+}
+
+/* Estilos de botones (copiados de PeriodosPage.css) */
+.btn-crear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  background-color: #2563eb; /* Azul */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  width: 100%; /* Para que ocupe el 100% del form-actions */
+}
+.btn-crear:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+.btn-crear:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-cancelar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4a5568;
+  background-color: #fff;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%; /* Para que ocupe el 100% del form-actions */
+  margin-top: 8px;
+}
+.btn-cancelar:hover:not(:disabled) {
+  background-color: #f7fafc;
+}
+
+.btn-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background-color: transparent;
+  transition: all 0.2s;
+}
+
+.btn-editar {
+  color: #2563eb;
+  border-color: #93c5fd;
+  background-color: #eff6ff;
+}
+.btn-editar:hover {
+  background-color: #dbeafe;
+  border-color: #60a5fa;
+}
+
+.btn-eliminar {
+  color: #dc2626;
+  border-color: #fecaca;
+  background-color: #fef2f2;
+  margin-left: 8px;
+}
+.btn-eliminar:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* Fix para botones de antd (si decides mantenerlos) */
+/* Esto intentará que los botones de Ant Design se parezcan a los de Periodos */
+
+/* Botón Primario (Crear/Actualizar) */
+.form-actions .ant-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  background-color: #2563eb;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  height: auto; /* Reset altura de antd */
+  padding: 10px 20px;
+  width: 100%;
+}
+.form-actions .ant-btn-primary:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Botón Cancelar */
+.form-actions .ant-btn-default {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #4a5568;
+  background-color: #fff;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  transition: all 0.2s;
+  height: auto; /* Reset altura de antd */
+  padding: 10px 20px;
+  width: 100%;
+}
+.form-actions .ant-btn-default:hover:not(:disabled) {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border-color: #cbd5e0;
+}
+
+/* Botones de la tabla */
+.cuentas-table .ant-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 4px 8px;
+  height: auto;
+}
+
+.cuentas-table .ant-btn-default {
+  color: #2563eb;
+  border-color: #93c5fd;
+  background-color: #eff6ff;
+}
+.cuentas-table .ant-btn-default:hover {
+  background-color: #dbeafe;
+  border-color: #60a5fa;
+  color: #2563eb;
+}
+
+.cuentas-table .ant-btn-dangerous {
+  color: #dc2626;
+  border-color: #fecaca;
+  background-color: #fef2f2;
+}
+.cuentas-table .ant-btn-dangerous:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}

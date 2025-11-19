@@ -1,0 +1,219 @@
+.reportes-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.reportes-page h1 {
+  color: #1e40af;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* Sección Export */
+.export-card {
+  background: #3b82f6;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  color: white;
+}
+
+.export-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.export-header h2 {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.export-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.status {
+  font-weight: 500;
+}
+
+.last-update {
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.export-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+.export-description {
+  flex: 1;
+}
+
+.export-description p {
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.export-description ul {
+  margin: 0;
+  padding-left: 20px;
+  opacity: 0.9;
+}
+
+.export-description li {
+  margin-bottom: 8px;
+}
+
+.export-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 200px;
+}
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+.excel-btn {
+  background: white;
+  color: #3b82f6;
+}
+
+.excel-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.html-btn {
+  background: transparent;
+  color: white;
+  border: 1px solid white;
+}
+
+.html-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Card de información */
+.info-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.info-card h3 {
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.info-item span {
+  font-size: 14px;
+  color: #1f2937;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reportes-page {
+    padding: 16px;
+  }
+
+  .export-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .export-info {
+    align-items: flex-start;
+  }
+
+  .export-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .export-buttons {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .export-buttons {
+    flex-direction: column;
+  }
+  
+  .export-btn {
+    justify-content: center;
+  }
+}
