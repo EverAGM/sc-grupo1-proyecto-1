@@ -1,9 +1,7 @@
-// Servicio para facturación electrónica
 import { toast } from 'react-toastify';
 
 const API_BASE_URL = 'http://localhost:3000/api/facturacion-electronica';
 
-// Obtener todas las facturas electrónicas
 export const obtenerFacturas = async () => {
   try {
     const response = await fetch(API_BASE_URL);
@@ -17,11 +15,10 @@ export const obtenerFacturas = async () => {
   } catch (error) {
     console.error('Error obteniendo facturas:', error);
     toast.error('Error al cargar las facturas electrónicas');
-    throw error; // Relanzar el error para que el componente lo maneje
+    throw error;
   }
 };
 
-// Crear nueva factura electrónica
 export const crearFactura = async (facturaData) => {
   try {
     const response = await fetch(API_BASE_URL, {
@@ -42,12 +39,20 @@ export const crearFactura = async (facturaData) => {
     }
   } catch (error) {
     console.error('Error creando factura:', error);
-    toast.error(error.message || 'Error al crear la factura electrónica');
+    
+    if (error.message.includes('FechaEmisionFueraDePeriodo')) {
+      toast.error(error.message);
+    } else if (error.message.includes('PeriodoContableNotFound')) {
+      toast.error('El período contable seleccionado no existe');
+    } else if (error.message.includes('total no coincide')) {
+      toast.error('El total no coincide con la suma de subtotal e impuestos');
+    } else {
+      toast.error(error.message || 'Error al crear la factura electrónica');
+    }
     throw error;
   }
 };
 
-// Obtener factura por ID
 export const obtenerFacturaPorId = async (id) => {
   try {
     const response = await fetch(`${API_BASE_URL}/${id}`);
@@ -65,7 +70,6 @@ export const obtenerFacturaPorId = async (id) => {
   }
 };
 
-// Actualizar factura electrónica
 export const actualizarFactura = async (id, facturaData) => {
   try {
     const response = await fetch(`${API_BASE_URL}/${id}`, {
@@ -86,12 +90,20 @@ export const actualizarFactura = async (id, facturaData) => {
     }
   } catch (error) {
     console.error('Error actualizando factura:', error);
-    toast.error(error.message || 'Error al actualizar la factura electrónica');
+    
+    if (error.message.includes('FechaEmisionFueraDePeriodo')) {
+      toast.error(error.message);
+    } else if (error.message.includes('PeriodoContableNotFound')) {
+      toast.error('El período contable seleccionado no existe');
+    } else if (error.message.includes('total no coincide')) {
+      toast.error('El total no coincide con la suma de subtotal e impuestos');
+    } else {
+      toast.error(error.message || 'Error al actualizar la factura electrónica');
+    }
     throw error;
   }
 };
 
-// Eliminar factura electrónica
 export const eliminarFactura = async (id) => {
   try {
     const response = await fetch(`${API_BASE_URL}/${id}`, {
@@ -113,7 +125,6 @@ export const eliminarFactura = async (id) => {
   }
 };
 
-// Obtener facturas por período
 export const obtenerFacturasPorPeriodo = async (idPeriodo) => {
   try {
     const response = await fetch(`${API_BASE_URL}/periodo/${idPeriodo}`);
@@ -131,7 +142,6 @@ export const obtenerFacturasPorPeriodo = async (idPeriodo) => {
   }
 };
 
-// Función auxiliar para formatear moneda
 export const formatearMoneda = (monto) => {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
@@ -140,7 +150,6 @@ export const formatearMoneda = (monto) => {
   }).format(monto || 0);
 };
 
-// Función auxiliar para formatear fecha
 export const formatearFecha = (fecha) => {
   if (!fecha) return '-';
   return new Date(fecha).toLocaleDateString('es-ES', {
@@ -150,7 +159,6 @@ export const formatearFecha = (fecha) => {
   });
 };
 
-// Estados disponibles para facturas electrónicas
 export const ESTADOS_FACTURA = [
   { value: 'BORRADOR', label: 'Borrador', color: '#gray' },
   { value: 'ENVIADA', label: 'Enviada', color: '#blue' },
@@ -159,7 +167,6 @@ export const ESTADOS_FACTURA = [
   { value: 'ANULADA', label: 'Anulada', color: '#orange' }
 ];
 
-// Función para obtener el color del estado
 export const obtenerColorEstado = (estado) => {
   const estadoObj = ESTADOS_FACTURA.find(e => e.value === estado);
   return estadoObj ? estadoObj.color : '#gray';
