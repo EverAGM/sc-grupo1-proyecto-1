@@ -11,13 +11,13 @@ export function periodoValidator(datos) {
 
     const estado_N = parseInt(estado);
     if(!isNaN(estado_N)){
-        throw new Error('EstadoInvalido: El estado debe ser ACTIVO o INACTIVO');
+        throw new Error('EstadoInvalido: El estado debe ser ACTIVO, PRÓXIMO O FINALIZADO');
     }
 
     const estado_L = String(estado || '').trim().toUpperCase();
 
-    if (estado_L !== 'ACTIVO' && estado_L !== 'INACTIVO') {
-        throw new Error('EstadoInvalido: El estado solo puede ser ACTIVO o INACTIVO.');
+    if (estado_L !== 'ACTIVO' && estado_L !== 'PRÓXIMO' && estado_L !== 'FINALIZADO') {
+        throw new Error('EstadoInvalido: El estado solo puede ser ACTIVO, PRÓXIMO, o FINALIZADO.');
     }
 
     if (!fecha_inicio || !fecha_fin || !estado_L) {
