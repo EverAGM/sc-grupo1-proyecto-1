@@ -160,7 +160,7 @@ export default function CuentasContables() {
         msg.includes("fk_cuenta_padre") ||
         msg.includes("foreign key")
       ) {
-        toast.error("No se puede eliminar esta cuenta porque tiene cuentas hijas asociadas.");
+        toast.error("No se puede eliminar esta cuenta porque tiene transacciones asociadas.");
       } else {
         toast.error("Ocurrió un error al intentar eliminar la cuenta contable.");
       }
@@ -271,7 +271,7 @@ export default function CuentasContables() {
                   <th>Tipo</th>
                   <th>Categoría</th>
                   <th>Padre</th>
-                  <th>AccIONES</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
