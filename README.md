@@ -2,6 +2,23 @@
 
 Sistema contable integral con módulo de facturación electrónica desarrollado en React + Vite.
 
+## 👥 Equipo de Desarrollo
+
+- **Grupo 1** - Sistemas Contables
+- **Proyecto** - ContaCorp
+- **Integrantes - Carnet**
+
+
+1. Agueda Rosales, Diego Alexander - AR23010
+2. Díaz Linarez, Daniel Alejandro - DL23001
+3. Granadino Mendoza, Ever Alexander - GM23004
+4. Linares Pacheco, Fernando José - LP23006
+5. Mejía Ramírez, Jonathan Javier - MR23005
+6. Mendoza Ramos, Miguel Angel - MR23061
+7. Olivares Martínez, Diego Enrique - OM23008
+
+
+
 ## 🚀 Características
 
 ### 📊 Módulos Principales
@@ -35,14 +52,15 @@ npm install
 npm run dev
 ```
 
-## 🛠️ Scripts Disponibles
+## 🐳 Levantar proyecto (Dockerizado)
 
 ```bash
-npm run dev          # Servidor de desarrollo (http://localhost:5173)
-npm run build        # Build para producción
-npm run preview      # Preview del build de producción
-npm run lint         # Verificar código con ESLint
+# Se debe de configurar la url de la base de datos antes de usar el comando 
+
+docker compose up # En la raíz del proyecto
+
 ```
+
 
 ## 📂 Estructura del Proyecto
 
@@ -122,14 +140,6 @@ El frontend se conecta al backend en `http://localhost:3000` por defecto.
 - **Diseño responsive** compatible con móviles
 - **Esquema de colores** moderno y profesional
 
-## 🚀 Deploy
-
-```bash
-# Build para producción
-npm run build
-
-# Los archivos se generan en la carpeta dist/
-```
 
 ## 🤝 Contribución
 
@@ -138,11 +148,6 @@ npm run build
 3. Commit cambios (`git commit -m 'feat: agregar nueva funcionalidad'`)
 4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Abrir Pull Request
-
-## 👥 Equipo de Desarrollo
-
-- **Grupo 1** - Sistemas Contables
-- **Proyecto** - ContaCorp
 
 ## 📄 Licencia
 
