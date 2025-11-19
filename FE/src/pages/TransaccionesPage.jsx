@@ -329,15 +329,13 @@ export default function TransaccionesPage() {
 
       if (nuevaPartida?.id_partida_diaria) {
         for (const t of transTemp) {
-          // Ensure fecha_operacion sent to backend is ISO (yyyy-mm-dd).
-          const fechaIsoToSend =
-            t.fecha_operacion_iso ||
-            new Date().toISOString().split("T")[0];
+          // Send fecha_operacion in DD/MM/YYYY format to backend
+          const fechaToSend = t.fecha_operacion || formatDate(new Date().toISOString().split("T")[0]);
 
           const payload = {
             ...t,
             partida_diaria_id: nuevaPartida.id_partida_diaria,
-            fecha_operacion: fechaIsoToSend,
+            fecha_operacion: fechaToSend,
           };
 
           await crearTransaccion(payload);
