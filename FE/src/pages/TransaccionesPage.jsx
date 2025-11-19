@@ -106,7 +106,6 @@ export default function TransaccionesPage() {
     return `${mon1}-${yy1} a ${mon2}-${yy2}`;
   };
 
-  // detect active periodo when periodos list updates
   useEffect(() => {
     if (!periodos || periodos.length === 0) {
       setActivePeriodo(null);
@@ -189,9 +188,26 @@ export default function TransaccionesPage() {
   const closeModal = () => setShowModal(false);
 
   const agregarTransaccion = () => {
-    if (!formTrans.cuenta_id || !formTrans.monto) return;
+    if (!formTrans.cuenta_id) {
+      toast.warn("Debe seleccionar una cuenta contable");
+      return;
+    }
     
-    // DatePicker ensures valid dates within range, so no need for manual validation
+    if (!formTrans.monto || formTrans.monto.trim() === "") {
+      toast.warn("Debe ingresar un monto para la transacción");
+      return;
+    }
+    
+    const montoNum = parseFloat(formTrans.monto);
+    if (isNaN(montoNum) || montoNum <= 0) {
+      toast.warn("El monto debe ser un número mayor a cero");
+      return;
+    }
+    
+    if (!formTrans.fecha_operacion_iso) {
+      toast.warn("Debe seleccionar una fecha de operación válida");
+      return;
+    }
     const todayIso = new Date().toISOString().split("T")[0];
     const fechaIso = formTrans.fecha_operacion_iso || todayIso;
     const fechaDisplay = formTrans.fecha_operacion && formTrans.fecha_operacion.trim() !== "" 
@@ -207,7 +223,7 @@ export default function TransaccionesPage() {
       },
     ]);
 
-    // reset form keeping fecha_operacion to today (display + iso)
+    toast.success("Transacción agregada correctamente");
     setFormTrans({
       cuenta_id: "",
       monto: "",
@@ -312,24 +328,42 @@ export default function TransaccionesPage() {
   };
 
   const guardarPartidaCompleta = async () => {
-    if (!partida.concepto || !partida.id_periodo) {
-      toast.warn("Debe ingresar concepto y periodo");
+    // Validaciones con mensajes específicos
+    if (!partida.concepto || partida.concepto.trim() === "") {
+      toast.warn("Debe ingresar un concepto para la partida diaria");
+      return;
+    }
+    
+    if (!partida.id_periodo) {
+      toast.warn("Debe seleccionar un periodo contable");
+      return;
+    }
+
+    if (transTemp.length === 0) {
+      toast.warn("Debe agregar al menos una transacción antes de guardar la partida");
+      return;
+    }
+    
+    // Validar que la suma de debe y haber sean iguales
+    const totalDebe = transTemp
+      .filter(t => t.tipo_transaccion === "DEBE")
+      .reduce((sum, t) => sum + parseFloat(t.monto || 0), 0);
+    
+    const totalHaber = transTemp
+      .filter(t => t.tipo_transaccion === "HABER")
+      .reduce((sum, t) => sum + parseFloat(t.monto || 0), 0);
+    
+    if (Math.abs(totalDebe - totalHaber) > 0.01) {
+      toast.error(`La partida no está balanceada. Debe: $${totalDebe.toFixed(2)}, Haber: $${totalHaber.toFixed(2)}`);
       return;
     }
 
     try {
-      if (transTemp.length === 0) {
-        toast.warn(
-          "Debe agregar al menos una transacción antes de guardar la partida"
-        );
-        return;
-      }
       setIsSaving(true);
       const nuevaPartida = await crearPartida(partida);
 
       if (nuevaPartida?.id_partida_diaria) {
         for (const t of transTemp) {
-          // Send fecha_operacion in DD/MM/YYYY format to backend
           const fechaToSend = t.fecha_operacion || formatDate(new Date().toISOString().split("T")[0]);
 
           const payload = {
