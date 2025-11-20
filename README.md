@@ -43,7 +43,7 @@ Sistema contable integral con módulo de facturación electrónica desarrollado 
 ```bash
 # Clonar el repositorio
 git clone https://github.com/EverAGM/sc-grupo1-proyecto-1.git
-cd sc-grupo1-proyecto-1/FE
+cd sc-grupo1-proyecto-1/
 ```
 
 ## 🐳 Levantar proyecto (Dockerizado)
