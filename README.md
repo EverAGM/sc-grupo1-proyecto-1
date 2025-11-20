@@ -44,20 +44,14 @@ Sistema contable integral con módulo de facturación electrónica desarrollado 
 # Clonar el repositorio
 git clone https://github.com/EverAGM/sc-grupo1-proyecto-1.git
 cd sc-grupo1-proyecto-1/FE
-
-# Instalar dependencias
-npm install
-
-# Ejecutar en modo desarrollo
-npm run dev
 ```
 
 ## 🐳 Levantar proyecto (Dockerizado)
 
 ```bash
-# Se debe de configurar la url de la base de datos antes de usar el comando 
+# En la carpeta raíz se debe ejecutar el siguiente comando
 
-docker compose up # En la raíz del proyecto
+docker compose up 
 
 ```
 
