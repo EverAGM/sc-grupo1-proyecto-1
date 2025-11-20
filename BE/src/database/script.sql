@@ -114,8 +114,8 @@ CREATE INDEX IF NOT EXISTS idx_transacciones_partida_diaria
     ON public.transacciones_contables(partida_diaria_id);
 
 INSERT INTO periodos_contables (fecha_inicio, fecha_fin, estado) VALUES
-('2024-01-01', '2024-12-31', 'ACTIVO'),
-('2025-01-01', '2025-12-31', 'ACTIVO')
+('2025-10-01', '2025-12-31', 'ACTIVO'),
+('2026-01-01', '2026-03-31', 'ACTIVO')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO cuentas_contables (codigo, nombre, tipo, categoria, padre_id) VALUES
@@ -144,17 +144,6 @@ INSERT INTO partida_diaria (concepto, estado, id_periodo) VALUES
 ('Compra de inventario', 'PROCESADO', 1),
 ('Pago de salarios administrativos', 'PROCESADO', 1),
 ('Cobro servicios bancarios', 'PENDIENTE', 1)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO transacciones_contables (cuenta_id, monto, tipo_transaccion, partida_diaria_id, fecha_operacion) VALUES
-(3, 15000.00, 'DEBE', 1, '2024-11-15'),
-(14, 15000.00, 'HABER', 1, '2024-11-15'),
-(4, 8500.00, 'DEBE', 2, '2024-11-16'),
-(9, 8500.00, 'HABER', 2, '2024-11-16'),
-(17, 3200.00, 'DEBE', 3, '2024-11-17'),
-(3, 3200.00, 'HABER', 3, '2024-11-17'),
-(18, 450.00, 'DEBE', 4, '2024-11-18'),
-(4, 450.00, 'HABER', 4, '2024-11-18')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO facturas_electronicas (numero_factura, fecha_emision, cliente_nombre, subtotal, impuestos, total, estado_fe, descripcion, id_periodo) VALUES
