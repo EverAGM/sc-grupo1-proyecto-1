@@ -55,6 +55,13 @@ docker compose up
 
 ```
 
+### 🌐 Acceso a la Aplicación
+
+Una vez que los contenedores estén ejecutándose correctamente, podrás acceder a:
+
+- **Frontend (React)**: [http://localhost:5173/](http://localhost:5173/)
+- **Backend (API)**: [http://localhost:3000/api](http://localhost:3000/api)
+
 
 ## 📂 Estructura del Proyecto
 
