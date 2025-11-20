@@ -160,7 +160,27 @@ class DatabaseConnection {
 
   async initializeDatabase() {
     try {
+      // Verificar si ya se ejecutó la inicialización
+      const migrationCheck = await this.query(
+        `SELECT 1 FROM information_schema.tables 
+         WHERE table_name = 'database_migrations'`
+      );
+      
+      if (migrationCheck.rows.length > 0) {
+        const alreadyInitialized = await this.query(
+          `SELECT 1 FROM database_migrations 
+           WHERE migration_id = 'initial_setup'`
+        );
+        
+        if (alreadyInitialized.rows.length > 0) {
+          console.log('Database already initialized, skipping script execution');
+          return;
+        }
+      }
+      
+      console.log('Executing database initialization script...');
       await this.executeScript('./script.sql');
+      console.log('Database initialized successfully');
     } catch (error) {
       console.error('Database initialization failed:', error.message);
     }

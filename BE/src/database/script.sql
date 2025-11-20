@@ -1,6 +1,15 @@
 
 BEGIN;
 
+-- Tabla de control para migraciones
+CREATE TABLE IF NOT EXISTS public.database_migrations
+(
+    migration_id character varying(50) NOT NULL,
+    executed_at timestamp with time zone DEFAULT now(),
+    description text,
+    CONSTRAINT database_migrations_pkey PRIMARY KEY (migration_id)
+);
+
 CREATE TABLE IF NOT EXISTS public.cuentas_contables
 (
     id_cuenta serial NOT NULL,
@@ -153,6 +162,10 @@ INSERT INTO facturas_electronicas (numero_factura, fecha_emision, cliente_nombre
 ('FE002-2024', '2024-11-16', 'Hospital Nacional Bloom', 7079.65, 1061.95, 8141.60, 'PROCESADO', 'Suministro uniformes medicos', 1),
 ('FE003-2024', '2024-11-17', 'Universidad Centroamericana', 4424.78, 663.72, 5088.50, 'PENDIENTE', 'Uniformes estudiantes', 1)
 ON CONFLICT (numero_factura) DO NOTHING;
+
+INSERT INTO database_migrations (migration_id, description) VALUES 
+('initial_setup', 'Initial database setup with tables and sample data')
+ON CONFLICT (migration_id) DO NOTHING;
 
 END;
 
