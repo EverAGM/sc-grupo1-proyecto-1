@@ -131,6 +131,41 @@ class DatabaseConnection {
     }
   }
 
+  async executeScript(scriptPath) {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const { fileURLToPath } = await import('url');
+      
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const fullPath = path.resolve(__dirname, scriptPath);
+      
+      const script = fs.readFileSync(fullPath, 'utf8');
+      
+      const statements = script.split(';').filter(stmt => stmt.trim().length > 0);
+      
+      for (const statement of statements) {
+        if (statement.trim()) {
+          await this.query(statement);
+        }
+      }
+      
+      console.log('Database script executed successfully');
+    } catch (error) {
+      console.error('Error executing database script:', error.message);
+      throw error;
+    }
+  }
+
+  async initializeDatabase() {
+    try {
+      await this.executeScript('./script.sql');
+    } catch (error) {
+      console.error('Database initialization failed:', error.message);
+    }
+  }
+
   async close() {
     if (this.pool) {
       console.log('🛑 Cerrando pool de conexiones...');
@@ -143,6 +178,16 @@ class DatabaseConnection {
 
 // Instancia única global
 const db = new DatabaseConnection();
+
+// Initialize database on startup
+(async () => {
+  try {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    await db.initializeDatabase();
+  } catch (error) {
+    console.error('Failed to initialize database on startup:', error.message);
+  }
+})();
 
 // Graceful shutdown
 const setupGracefulShutdown = () => {
@@ -166,5 +211,6 @@ export default {
   getClient: () => db.getClient(),
   healthCheck: () => db.healthCheck(),
   close: () => db.close(),
+  initializeDatabase: () => db.initializeDatabase(),
   pool: db.pool
 };

@@ -13,9 +13,17 @@ services:
     env_file:
       - .env
     environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: root
+      DB_USER: root
+      DB_PASSWORD: root
       DB_SSL: "false"
       NODE_ENV: production
-    network_mode: host
+    depends_on:
+      - postgres
+    networks:
+      - sic_network
   frontend:
     build:
       context: ./FE
@@ -32,6 +40,17 @@ services:
     networks:
       - sic_network
 
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=root
+    networks:
+      - sic_network
 
 networks:
   sic_network:

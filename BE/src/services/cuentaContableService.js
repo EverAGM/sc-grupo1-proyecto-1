@@ -66,29 +66,36 @@ class CuentaContableService {
       }
 
       const codigoPadre = padreResult.rows[0].codigo;
-
-      // Buscar último hijo
       const hijosResult = await db.query(
-        `
-            SELECT codigo FROM cuentas_contables 
-            WHERE padre_id = $1 
-            ORDER BY codigo DESC 
-            LIMIT 1
-        `,
+        `SELECT codigo FROM cuentas_contables 
+         WHERE padre_id = $1 
+         ORDER BY codigo DESC 
+         LIMIT 1`,
         [padreId]
       );
 
       if (hijosResult.rows.length === 0) {
-        return `${codigoPadre}01`; // Primer hijo
+        if (codigoPadre.length === 1) {
+          return `${codigoPadre}.1`;
+        } else {
+          return `${codigoPadre}.01`;
+        }
       }
 
       const ultimoHijo = hijosResult.rows[0].codigo;
-      const secuencia = ultimoHijo.substring(codigoPadre.length);
-      const nuevaSecuencia = (parseInt(secuencia) + 1)
-        .toString()
-        .padStart(2, "0");
-
-      return `${codigoPadre}${nuevaSecuencia}`;
+      const partesUltimoHijo = ultimoHijo.split('.');
+      const ultimaSecuencia = partesUltimoHijo[partesUltimoHijo.length - 1];
+      const numeroSecuencia = parseInt(ultimaSecuencia, 10);
+      if (isNaN(numeroSecuencia)) {
+        throw new Error(`Código de cuenta inválido: ${ultimoHijo}`);
+      }    
+      const nuevaSecuencia = numeroSecuencia + 1;
+  
+      if (codigoPadre.length === 1) {
+        return `${codigoPadre}.${nuevaSecuencia}`;
+      } else {
+        return `${codigoPadre}.${nuevaSecuencia.toString().padStart(2, "0")}`;
+      }
     }
   }
 
