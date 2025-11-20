@@ -17,27 +17,6 @@ Sistema contable integral con módulo de facturación electrónica desarrollado 
 6. Mendoza Ramos, Miguel Angel - MR23061
 7. Olivares Martínez, Diego Enrique - OM23008
 
-
-
-## 🚀 Características
-
-### 📊 Módulos Principales
-- **📋 Cuentas Contables** - Gestión del plan de cuentas
-- **💸 Transacciones** - Registro de movimientos contables
-- **📅 Períodos Contables** - Administración de períodos fiscales
-- **⚖️ Balance** - Visualización de estados financieros
-- **📈 Reportes** - Generación de reportes contables
-- **🧾 Facturación Electrónica** - Sistema completo de facturación
-
-### 🎨 Tecnologías Utilizadas
-- **React 18** - Framework de frontend
-- **Vite** - Herramienta de desarrollo y build
-- **React Router** - Navegación entre páginas
-- **Ant Design** - Biblioteca de componentes UI
-- **React Icons** - Iconografía moderna
-- **React Toastify** - Notificaciones toast
-- **Moment.js** - Manejo de fechas
-
 ## 📦 Instalación
 
 ```bash
@@ -62,9 +41,43 @@ Una vez que los contenedores estén ejecutándose correctamente, podrás acceder
 - **Frontend (React)**: [http://localhost:5173/](http://localhost:5173/)
 - **Backend (API)**: [http://localhost:3000/api](http://localhost:3000/api)
 
+## 🚀 Características
+
+### 📊 Módulos Principales
+- **📋 Cuentas Contables** - Gestión del plan de cuentas
+- **💸 Transacciones** - Registro de movimientos contables
+- **📅 Períodos Contables** - Administración de períodos fiscales
+- **⚖️ Balance** - Visualización de estados financieros
+- **📈 Reportes** - Generación de reportes contables
+- **🧾 Facturación Electrónica** - Sistema completo de facturación
+
+### 🎨 Tecnologías Utilizadas
+
+#### Frontend (FE)
+- **React 18** - Framework de frontend
+- **Vite** - Herramienta de desarrollo y build
+- **React Router** - Navegación entre páginas
+- **Ant Design** - Biblioteca de componentes UI
+- **React Icons** - Iconografía moderna
+- **React Toastify** - Notificaciones toast
+- **Moment.js** - Manejo de fechas
+
+#### Backend (BE)
+- **Node.js** - Runtime de JavaScript
+- **Express.js** - Framework web para Node.js
+- **PostgreSQL** - Base de datos relacional
+- **pg** - Cliente PostgreSQL para Node.js
+- **CORS** - Middleware para habilitar CORS
+- **Morgan** - Middleware de logging HTTP
+- **Multer** - Middleware para manejo de archivos
+- **CSV-Parser** - Parser de archivos CSV
+- **Node-XLSX** - Procesamiento de archivos Excel
+- **Dotenv** - Manejo de variables de entorno
+- **Nodemon** - Herramienta de desarrollo (auto-restart)
 
 ## 📂 Estructura del Proyecto
 
+### Frontend (FE)
 ```
 FE/
 ├── public/              # Archivos estáticos
@@ -87,6 +100,48 @@ FE/
 │   └── main.jsx         # Punto de entrada
 ├── package.json
 └── vite.config.js       # Configuración de Vite
+```
+
+### Backend (BE)
+```
+BE/
+├── Dockerfile           # Configuración de Docker
+├── package.json         # Dependencias del proyecto
+├── .env                 # Variables de entorno
+└── src/
+    ├── config.js        # Configuración de la aplicación
+    ├── index.js         # Punto de entrada del servidor
+    ├── controllers/     # Controladores (lógica de endpoints)
+    │   ├── cuentaContableController.js
+    │   ├── facturacionElectronicaController.js
+    │   ├── manejoExcelController.js
+    │   ├── partidaDiariaController.js
+    │   ├── periodoContableController.js
+    │   └── transaccionContableController.js
+    ├── database/        # Configuración y scripts de BD
+    │   ├── db.js        # Conexión a PostgreSQL
+    │   └── script.sql   # Script de inicialización
+    ├── helpers/         # Funciones de validación
+    │   ├── cuentaContableValidator.js
+    │   ├── fechaValidator.js
+    │   ├── partidaValidator.js
+    │   ├── periodoValidator.js
+    │   └── transaccionValidator.js
+    ├── routes/          # Definición de rutas
+    │   ├── routes.js    # Rutas principales
+    │   ├── cuenta_contable.routes.js
+    │   ├── facturacion_electronica.routes.js
+    │   ├── manejo_excel.routes.js
+    │   ├── partida_diaria.routes.js
+    │   ├── periodo_contable.routes.js
+    │   └── transaccion_contable.routes.js
+    └── services/        # Lógica de negocio
+        ├── cuentaContableService.js
+        ├── facturacionElectronicaService.js
+        ├── manejoExcelService.js
+        ├── partidaDiariaService.js
+        ├── periodoContableService.js
+        └── transaccionContableService.js
 ```
 
 ## 🧾 Módulo de Facturación Electrónica
@@ -126,13 +181,6 @@ FE/
 
 ### Variables de Entorno
 El frontend se conecta al backend en `http://localhost:3000` por defecto.
-
-## cambiar muy especifico
-### API Endpoints
-- `GET /api/facturacion-electronica` - Listar facturas
-- `POST /api/facturacion-electronica` - Crear factura
-- `PUT /api/facturacion-electronica/:id` - Actualizar factura
-- `DELETE /api/facturacion-electronica/:id` - Eliminar factura
 
 ## 🎨 Estilos y Temas
 
